@@ -28,6 +28,7 @@ share/python-wheels/
 
 # Virtual environments
 .env
+.env.local
 .venv
 env/
 venv/
@@ -38,6 +39,8 @@ venv.bak/
 # Testing and coverage
 .pytest_cache/
 .coverage
+.coverage.*
+coverage.xml
 htmlcov/
 
 # IDE files
