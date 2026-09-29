@@ -49,3 +49,6 @@ htmlcov/
 *.swp
 *.swo
 .DS_Store
+
+# Cohzen telemetry and local runtime data
+.cohzen/
