@@ -24,11 +24,24 @@ _current_store: ContextVar[Optional[ExecutionStore]] = ContextVar("cz_current_st
 _global_store: Optional[ExecutionStore] = None
 
 
+def _find_db_path() -> Path:
+    """Find .cohzen/executions.db traversing parent directories up to project root."""
+    curr = Path.cwd().resolve()
+    for directory in [curr, *curr.parents]:
+        candidate = directory / ".cohzen" / "executions.db"
+        if candidate.is_file():
+            return candidate
+        manifest_candidate = directory / ".cohzen" / "manifest.json"
+        if manifest_candidate.is_file():
+            return directory / ".cohzen" / "executions.db"
+    return Path(".cohzen/executions.db")
+
+
 def get_global_store() -> ExecutionStore:
     """Return the global execution store, initializing a default SQLite store if none set."""
     global _global_store
     if _global_store is None:
-        db_path = Path(".cohzen/executions.db")
+        db_path = _find_db_path()
         _global_store = SQLiteExecutionStore(db_path=db_path)
     return _global_store
 
