@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.0] - 2026-10-02
+
+### Added
+- **Runtime Execution Tracking & Observability (`cz init`, `cz runs`, `cz run <id>`)**:
+  - Transparent LangChain / LangGraph execution tracing with zero code changes via `CohzenCallbackHandler`.
+  - SQLite persistent telemetry store `.cohzen/executions.db` recording run states, tokens, latency, and spans.
+  - Interactive terminal run viewers, detailed JSON payloads, and execution waterfall timeline graphs (`cz waterfall`).
+- **Isolated Node Debugger (`cz node run`, `cz node list`, `cz debug`)**:
+  - Test and run individual LangGraph nodes directly in isolation without compiling or running the entire graph.
+  - State replay from previous executions using `--from-run <id>`.
+  - Smart state hydration reconstructing Pydantic models, dual-access state dicts, and LangChain message objects.
+- **Interactive Browser Telemetry Viewer**:
+  - Visual Gantt waterfall and execution trace inspection in browser (`cz run <id> --view`).
+
+---
+
 ## [0.1.0] - 2024-09-19
 
 ### Added
