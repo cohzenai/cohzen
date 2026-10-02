@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 from enum import Enum
+import json
 from pathlib import Path
+import re
+import shutil
 from typing import Optional
 
 import typer
@@ -29,7 +32,7 @@ from cz.scanner.engine import scan_repository
 
 app = typer.Typer(
     name="cz",
-    help="cz - Statically scan repositories to reconstruct LangGraph architecture and generate system manifests.",
+    help="cz - Static LangGraph scanner and runtime execution tracking engine.",
     add_completion=False,
 )
 console = Console()
