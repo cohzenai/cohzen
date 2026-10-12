@@ -6,15 +6,20 @@ import builtins
 import functools
 import inspect
 import sys
-from typing import Any, Callable, Dict, Optional, Set
+from collections.abc import Callable
+from typing import Any
 
 from cz.execution.callbacks import CohzenCallbackHandler
-from cz.execution.context import execution_scope, get_current_execution, get_current_store, set_global_store
+from cz.execution.context import (
+    execution_scope,
+    get_current_execution,
+    set_global_store,
+)
 from cz.execution.manifest_matcher import ManifestMatcher
 from cz.execution.store import ExecutionStore
 
-_PATCHED: Set[str] = set()
-_ORIGINAL_FUNCS: Dict[str, Callable[..., Any]] = {}
+_PATCHED: set[str] = set()
+_ORIGINAL_FUNCS: dict[str, Callable[..., Any]] = {}
 _IMPORT_HOOK_INSTALLED = False
 _ORIGINAL_IMPORT = builtins.__import__
 
@@ -31,9 +36,11 @@ async def _acall_original(fn: Any, self: Any, *args: Any, **kwargs: Any) -> Any:
     return await fn(self, *args, **kwargs)
 
 
-def _wrap_compiled_graph_invoke(original_invoke: Callable[..., Any]) -> Callable[..., Any]:
+def _wrap_compiled_graph_invoke(
+    original_invoke: Callable[..., Any],
+) -> Callable[..., Any]:
     @functools.wraps(original_invoke)
-    def wrapper(self: Any, input: Any, config: Optional[Dict[str, Any]] = None, **kwargs: Any) -> Any:
+    def wrapper(self: Any, input: Any, config: dict[str, Any] | None = None, **kwargs: Any) -> Any:
         cfg = dict(config) if config else {}
         callbacks = cfg.get("callbacks")
         if callbacks and any(isinstance(cb, CohzenCallbackHandler) for cb in callbacks):
@@ -59,9 +66,11 @@ def _wrap_compiled_graph_invoke(original_invoke: Callable[..., Any]) -> Callable
     return wrapper
 
 
-def _wrap_compiled_graph_ainvoke(original_ainvoke: Callable[..., Any]) -> Callable[..., Any]:
+def _wrap_compiled_graph_ainvoke(
+    original_ainvoke: Callable[..., Any],
+) -> Callable[..., Any]:
     @functools.wraps(original_ainvoke)
-    async def wrapper(self: Any, input: Any, config: Optional[Dict[str, Any]] = None, **kwargs: Any) -> Any:
+    async def wrapper(self: Any, input: Any, config: dict[str, Any] | None = None, **kwargs: Any) -> Any:
         cfg = dict(config) if config else {}
         callbacks = cfg.get("callbacks")
         if callbacks and any(isinstance(cb, CohzenCallbackHandler) for cb in callbacks):
@@ -87,9 +96,11 @@ def _wrap_compiled_graph_ainvoke(original_ainvoke: Callable[..., Any]) -> Callab
     return wrapper
 
 
-def _wrap_compiled_graph_stream(original_stream: Callable[..., Any]) -> Callable[..., Any]:
+def _wrap_compiled_graph_stream(
+    original_stream: Callable[..., Any],
+) -> Callable[..., Any]:
     @functools.wraps(original_stream)
-    def wrapper(self: Any, input: Any, config: Optional[Dict[str, Any]] = None, **kwargs: Any) -> Any:
+    def wrapper(self: Any, input: Any, config: dict[str, Any] | None = None, **kwargs: Any) -> Any:
         cfg = dict(config) if config else {}
         callbacks = cfg.get("callbacks")
         if callbacks and any(isinstance(cb, CohzenCallbackHandler) for cb in callbacks):
@@ -116,9 +127,11 @@ def _wrap_compiled_graph_stream(original_stream: Callable[..., Any]) -> Callable
     return wrapper
 
 
-def _wrap_compiled_graph_astream(original_astream: Callable[..., Any]) -> Callable[..., Any]:
+def _wrap_compiled_graph_astream(
+    original_astream: Callable[..., Any],
+) -> Callable[..., Any]:
     @functools.wraps(original_astream)
-    async def wrapper(self: Any, input: Any, config: Optional[Dict[str, Any]] = None, **kwargs: Any) -> Any:
+    async def wrapper(self: Any, input: Any, config: dict[str, Any] | None = None, **kwargs: Any) -> Any:
         cfg = dict(config) if config else {}
         callbacks = cfg.get("callbacks")
         if callbacks and any(isinstance(cb, CohzenCallbackHandler) for cb in callbacks):
@@ -185,7 +198,7 @@ def _patch_target_class(mod_name: str, class_name: str) -> None:
     _PATCHED.add(key)
 
 
-def _auto_instrument_dict(target_dict: Dict[str, Any], matcher: ManifestMatcher) -> None:
+def _auto_instrument_dict(target_dict: dict[str, Any], matcher: ManifestMatcher) -> None:
     """Inspect a module's namespace and dynamically wrap tools and LLM callables with @cz.observe."""
     from cz.execution.context import observe
 
@@ -335,6 +348,7 @@ def _patch_add_node_method(mod_name: str, class_name: str) -> None:
                 from cz.execution.context import get_current_span
 
                 if inspect.iscoroutinefunction(action):
+
                     @functools.wraps(action)
                     async def wrapped_node_action(*n_args: Any, **n_kwargs: Any) -> Any:
                         span = get_current_span()
@@ -344,8 +358,10 @@ def _patch_add_node_method(mod_name: str, class_name: str) -> None:
                         if isinstance(res, dict) and span and not span.reason:
                             span.reason = res.get("reason") or res.get("reasoning") or res.get("why")
                         return res
+
                     wrapped_action = wrapped_node_action
                 else:
+
                     @functools.wraps(action)
                     def wrapped_node_action(*n_args: Any, **n_kwargs: Any) -> Any:
                         span = get_current_span()
@@ -355,6 +371,7 @@ def _patch_add_node_method(mod_name: str, class_name: str) -> None:
                         if isinstance(res, dict) and span and not span.reason:
                             span.reason = res.get("reason") or res.get("reasoning") or res.get("why")
                         return res
+
                     wrapped_action = wrapped_node_action
 
                 wrapped_action._cohzen_wrapped = True
@@ -404,13 +421,19 @@ def _apply_patches_if_needed(mod_name: str, mod: Any = None) -> None:
             pass
 
 
-def _cohzen_import(name: str, globals: Any = None, locals: Any = None, fromlist: Any = (), level: int = 0) -> Any:
+def _cohzen_import(
+    name: str,
+    globals: Any = None,
+    locals: Any = None,
+    fromlist: Any = (),
+    level: int = 0,
+) -> Any:
     mod = _ORIGINAL_IMPORT(name, globals, locals, fromlist, level)
     _apply_patches_if_needed(name, mod)
     return mod
 
 
-def install(store: Optional[ExecutionStore] = None) -> None:
+def install(store: ExecutionStore | None = None) -> None:
     """Install auto-instrumentation hooks for LangGraph and LangChain.
 
     Called automatically via sitecustomize.py (from `cz init`) or programmatically via `cz.track()`.
@@ -451,6 +474,6 @@ def uninstall() -> None:
     _PATCHED.clear()
 
 
-def track(store: Optional[ExecutionStore] = None) -> None:
+def track(store: ExecutionStore | None = None) -> None:
     """Convenience function to enable Cohzen execution tracking."""
     install(store=store)

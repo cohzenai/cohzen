@@ -2,23 +2,28 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
 import time
-from typing import Any, Dict, List, Optional
 import uuid
+from datetime import datetime, timezone
+from typing import Any
 
-from cz.execution.context import _current_span, get_current_execution, get_current_span, get_current_store
+from cz.execution.context import (
+    _current_span,
+    get_current_execution,
+    get_current_span,
+    get_current_store,
+)
 from cz.execution.manifest_matcher import ManifestMatcher
-from cz.execution.models import Event, Execution, Span
+from cz.execution.models import Execution, Span
 from cz.execution.store import ExecutionStore
 
 # BaseCallbackHandler may or may not be available depending on user environment
 try:
     from langchain_core.callbacks.base import BaseCallbackHandler
 except ImportError:
+
     class BaseCallbackHandler:  # type: ignore[no-redef]
         """Fallback callback handler base class when langchain_core is not installed."""
-        pass
 
 
 class CohzenCallbackHandler(BaseCallbackHandler):
@@ -26,34 +31,34 @@ class CohzenCallbackHandler(BaseCallbackHandler):
 
     def __init__(
         self,
-        store: Optional[ExecutionStore] = None,
-        matcher: Optional[ManifestMatcher] = None,
-        graph_id: Optional[str] = None,
+        store: ExecutionStore | None = None,
+        matcher: ManifestMatcher | None = None,
+        graph_id: str | None = None,
     ):
         super().__init__()
         self.store = store or get_current_store()
         self.matcher = matcher or ManifestMatcher()
         self.graph_id = graph_id
         # Map run_id (str) -> Span
-        self._run_spans: Dict[str, Span] = {}
+        self._run_spans: dict[str, Span] = {}
         # Map run_id -> contextvar Token
-        self._span_tokens: Dict[str, Any] = {}
+        self._span_tokens: dict[str, Any] = {}
         # Map run_id -> monotonic start time
-        self._start_times: Dict[str, float] = {}
+        self._start_times: dict[str, float] = {}
         # Root run ID representing the graph invocation
-        self._root_run_id: Optional[str] = None
+        self._root_run_id: str | None = None
         # Track whether this handler created the top-level execution
-        self._created_execution: Optional[Execution] = None
+        self._created_execution: Execution | None = None
 
     def on_chain_start(
         self,
-        serialized: Optional[Dict[str, Any]],
-        inputs: Dict[str, Any],
+        serialized: dict[str, Any] | None,
+        inputs: dict[str, Any],
         *,
         run_id: uuid.UUID,
-        parent_run_id: Optional[uuid.UUID] = None,
-        tags: Optional[List[str]] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        parent_run_id: uuid.UUID | None = None,
+        tags: list[str] | None = None,
+        metadata: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> None:
         run_id_str = str(run_id)
@@ -67,7 +72,12 @@ class CohzenCallbackHandler(BaseCallbackHandler):
         # Check if this is the root invocation of the graph
         if parent_id_str is None and self._root_run_id is None:
             self._root_run_id = run_id_str
-            graph_name = self.graph_id or meta.get("langgraph_graph") or (serialized.get("name") if serialized else None) or "graph"
+            graph_name = (
+                self.graph_id
+                or meta.get("langgraph_graph")
+                or (serialized.get("name") if serialized else None)
+                or "graph"
+            )
             resolved_graph_id = self.matcher.resolve_graph_id(graph_name)
 
             # Ensure an Execution exists
@@ -104,7 +114,12 @@ class CohzenCallbackHandler(BaseCallbackHandler):
         if not node_name and serialized and serialized.get("name"):
             # Check if name looks like a node
             name = serialized.get("name")
-            if name not in ("RunnableSequence", "RunnableParallel", "StateGraph", "CompiledStateGraph"):
+            if name not in (
+                "RunnableSequence",
+                "RunnableParallel",
+                "StateGraph",
+                "CompiledStateGraph",
+            ):
                 node_name = name
 
         if node_name:
@@ -129,10 +144,10 @@ class CohzenCallbackHandler(BaseCallbackHandler):
 
     def on_chain_end(
         self,
-        outputs: Dict[str, Any],
+        outputs: dict[str, Any],
         *,
         run_id: uuid.UUID,
-        parent_run_id: Optional[uuid.UUID] = None,
+        parent_run_id: uuid.UUID | None = None,
         **kwargs: Any,
     ) -> None:
         run_id_str = str(run_id)
@@ -180,12 +195,12 @@ class CohzenCallbackHandler(BaseCallbackHandler):
         error: BaseException,
         *,
         run_id: uuid.UUID,
-        parent_run_id: Optional[uuid.UUID] = None,
+        parent_run_id: uuid.UUID | None = None,
         **kwargs: Any,
     ) -> None:
         run_id_str = str(run_id)
         span = self._run_spans.get(run_id_str)
-        err_msg = f"{type(error).__name__}: {str(error)}"
+        err_msg = f"{type(error).__name__}: {error!s}"
         if span:
             duration_ms = self._calc_duration(run_id_str)
             ended_at = datetime.now(timezone.utc)
@@ -217,13 +232,13 @@ class CohzenCallbackHandler(BaseCallbackHandler):
 
     def on_chat_model_start(
         self,
-        serialized: Optional[Dict[str, Any]],
-        messages: List[List[Any]],
+        serialized: dict[str, Any] | None,
+        messages: list[list[Any]],
         *,
         run_id: uuid.UUID,
-        parent_run_id: Optional[uuid.UUID] = None,
-        metadata: Optional[Dict[str, Any]] = None,
-        invocation_params: Optional[Dict[str, Any]] = None,
+        parent_run_id: uuid.UUID | None = None,
+        metadata: dict[str, Any] | None = None,
+        invocation_params: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> None:
         self._record_llm_start(
@@ -237,13 +252,13 @@ class CohzenCallbackHandler(BaseCallbackHandler):
 
     def on_llm_start(
         self,
-        serialized: Optional[Dict[str, Any]],
-        prompts: List[str],
+        serialized: dict[str, Any] | None,
+        prompts: list[str],
         *,
         run_id: uuid.UUID,
-        parent_run_id: Optional[uuid.UUID] = None,
-        metadata: Optional[Dict[str, Any]] = None,
-        invocation_params: Optional[Dict[str, Any]] = None,
+        parent_run_id: uuid.UUID | None = None,
+        metadata: dict[str, Any] | None = None,
+        invocation_params: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> None:
         self._record_llm_start(
@@ -257,12 +272,12 @@ class CohzenCallbackHandler(BaseCallbackHandler):
 
     def _record_llm_start(
         self,
-        serialized: Optional[Dict[str, Any]],
+        serialized: dict[str, Any] | None,
         inputs: Any,
         run_id: uuid.UUID,
-        parent_run_id: Optional[uuid.UUID],
-        metadata: Optional[Dict[str, Any]],
-        invocation_params: Optional[Dict[str, Any]],
+        parent_run_id: uuid.UUID | None,
+        metadata: dict[str, Any] | None,
+        invocation_params: dict[str, Any] | None,
     ) -> None:
         run_id_str = str(run_id)
         parent_id_str = str(parent_run_id) if parent_run_id else None
@@ -310,7 +325,7 @@ class CohzenCallbackHandler(BaseCallbackHandler):
         response: Any,
         *,
         run_id: uuid.UUID,
-        parent_run_id: Optional[uuid.UUID] = None,
+        parent_run_id: uuid.UUID | None = None,
         **kwargs: Any,
     ) -> None:
         run_id_str = str(run_id)
@@ -327,7 +342,10 @@ class CohzenCallbackHandler(BaseCallbackHandler):
                 span.metadata["token_usage"] = token_usage
 
             if hasattr(response, "generations"):
-                output_data = [[gen.text if hasattr(gen, "text") else str(gen) for gen in sublist] for sublist in response.generations]
+                output_data = [
+                    [gen.text if hasattr(gen, "text") else str(gen) for gen in sublist]
+                    for sublist in response.generations
+                ]
             else:
                 output_data = str(response)
 
@@ -345,7 +363,7 @@ class CohzenCallbackHandler(BaseCallbackHandler):
         error: BaseException,
         *,
         run_id: uuid.UUID,
-        parent_run_id: Optional[uuid.UUID] = None,
+        parent_run_id: uuid.UUID | None = None,
         **kwargs: Any,
     ) -> None:
         run_id_str = str(run_id)
@@ -358,17 +376,17 @@ class CohzenCallbackHandler(BaseCallbackHandler):
                 status="failed",
                 ended_at=ended_at,
                 duration_ms=duration_ms,
-                error=f"{type(error).__name__}: {str(error)}",
+                error=f"{type(error).__name__}: {error!s}",
             )
 
     def on_tool_start(
         self,
-        serialized: Optional[Dict[str, Any]],
+        serialized: dict[str, Any] | None,
         input_str: str,
         *,
         run_id: uuid.UUID,
-        parent_run_id: Optional[uuid.UUID] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        parent_run_id: uuid.UUID | None = None,
+        metadata: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> None:
         run_id_str = str(run_id)
@@ -397,7 +415,7 @@ class CohzenCallbackHandler(BaseCallbackHandler):
         output: Any,
         *,
         run_id: uuid.UUID,
-        parent_run_id: Optional[uuid.UUID] = None,
+        parent_run_id: uuid.UUID | None = None,
         **kwargs: Any,
     ) -> None:
         run_id_str = str(run_id)
@@ -418,7 +436,7 @@ class CohzenCallbackHandler(BaseCallbackHandler):
         error: BaseException,
         *,
         run_id: uuid.UUID,
-        parent_run_id: Optional[uuid.UUID] = None,
+        parent_run_id: uuid.UUID | None = None,
         **kwargs: Any,
     ) -> None:
         run_id_str = str(run_id)
@@ -431,7 +449,7 @@ class CohzenCallbackHandler(BaseCallbackHandler):
                 status="failed",
                 ended_at=ended_at,
                 duration_ms=duration_ms,
-                error=f"{type(error).__name__}: {str(error)}",
+                error=f"{type(error).__name__}: {error!s}",
             )
 
     def _calc_duration(self, run_id_str: str) -> float:
@@ -448,7 +466,7 @@ class CohzenCallbackHandler(BaseCallbackHandler):
             return current.id
         return "exec_unknown"
 
-    def _find_parent_span_id(self, parent_run_id_str: Optional[str]) -> Optional[str]:
+    def _find_parent_span_id(self, parent_run_id_str: str | None) -> str | None:
         if not parent_run_id_str:
             return None
         if parent_run_id_str in self._run_spans:

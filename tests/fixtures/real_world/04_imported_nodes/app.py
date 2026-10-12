@@ -1,6 +1,6 @@
-from langgraph.graph import StateGraph, START, END
 # Node functions imported from third-party or unparsed package
 from external_agent_pkg import autonomous_solver, safety_guardrail
+from langgraph.graph import END, START, StateGraph
 
 builder = StateGraph(dict)
 builder.add_node("solver", autonomous_solver)

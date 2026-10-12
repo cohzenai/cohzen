@@ -2,10 +2,10 @@
 
 from datetime import datetime, timezone
 from pathlib import Path
-import tempfile
+
 import pytest
 
-from cz.execution.models import Event, Execution, Span
+from cz.execution.models import Execution, Span
 from cz.execution.processor import RedactionProcessor
 from cz.execution.sqlite import SQLiteExecutionStore
 

@@ -5,13 +5,10 @@ from __future__ import annotations
 import ast
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional, Set
 
-from cz.scanner.utils import (
-    ast_to_str,
-    extract_list_of_strings,
-    get_decorator_names,
-)
+from cz.audit.registry import ObservabilityRegistry
+from cz.detectors.llm.registry import LLMRegistry
+from cz.detectors.registry import FrameworkRegistry
 from cz.scanner.models import (
     AgentDef,
     GraphInfo,
@@ -22,24 +19,32 @@ from cz.scanner.models import (
     ToolNodeDef,
     ToolsBoundInfo,
 )
-from cz.detectors.registry import FrameworkRegistry
-from cz.detectors.llm.registry import LLMRegistry
-from cz.audit.registry import ObservabilityRegistry
+from cz.scanner.utils import (
+    ast_to_str,
+    extract_list_of_strings,
+    get_decorator_names,
+)
 
-KNOWN_PROMPT_CLASSES = ["ChatPromptTemplate", "PromptTemplate", "SystemMessage", "HumanMessage"]
+KNOWN_PROMPT_CLASSES = [
+    "ChatPromptTemplate",
+    "PromptTemplate",
+    "SystemMessage",
+    "HumanMessage",
+]
 
 
 @dataclass
 class FileScanResult:
     """Consolidated results of AST analysis on a single Python file."""
-    graphs: List[GraphInfo] = field(default_factory=list)
-    agent_defs: List[AgentDef] = field(default_factory=list)
-    tool_defs: List[ToolDef] = field(default_factory=list)
-    tool_nodes: List[ToolNodeDef] = field(default_factory=list)
-    tools_bound: List[ToolsBoundInfo] = field(default_factory=list)
-    prompts: List[PromptDef] = field(default_factory=list)
-    import_sources: Dict[str, str] = field(default_factory=dict)
-    errors: List[ScanError] = field(default_factory=list)
+
+    graphs: list[GraphInfo] = field(default_factory=list)
+    agent_defs: list[AgentDef] = field(default_factory=list)
+    tool_defs: list[ToolDef] = field(default_factory=list)
+    tool_nodes: list[ToolNodeDef] = field(default_factory=list)
+    tools_bound: list[ToolsBoundInfo] = field(default_factory=list)
+    prompts: list[PromptDef] = field(default_factory=list)
+    import_sources: dict[str, str] = field(default_factory=dict)
+    errors: list[ScanError] = field(default_factory=list)
 
 
 class UnifiedASTVisitor(ast.NodeVisitor):
@@ -57,12 +62,12 @@ class UnifiedASTVisitor(ast.NodeVisitor):
         self.llm_registry = llm_registry
         self.observability_registry = observability_registry
 
-        self.agent_defs: Dict[str, AgentDef] = {}
-        self.tool_defs: Dict[str, ToolDef] = {}
-        self.prompts: Dict[str, PromptDef] = {}
-        self.tools_bound: List[ToolsBoundInfo] = []
-        self.var_lists: Dict[str, List[str]] = {}
-        self.import_sources: Dict[str, str] = {}
+        self.agent_defs: dict[str, AgentDef] = {}
+        self.tool_defs: dict[str, ToolDef] = {}
+        self.prompts: dict[str, PromptDef] = {}
+        self.tools_bound: list[ToolsBoundInfo] = []
+        self.var_lists: dict[str, list[str]] = {}
+        self.import_sources: dict[str, str] = {}
         self.known_decorators = self.observability_registry.get_all_known_decorators()
 
     def visit_Import(self, node: ast.Import) -> None:
@@ -78,8 +83,8 @@ class UnifiedASTVisitor(ast.NodeVisitor):
             self.import_sources[imported_as] = module
         self.generic_visit(node)
 
-    def _resolve_tools_list(self, raw_list: List[str]) -> List[str]:
-        resolved: List[str] = []
+    def _resolve_tools_list(self, raw_list: list[str]) -> list[str]:
+        resolved: list[str] = []
         for item in raw_list:
             if item in self.var_lists:
                 resolved.extend(self.var_lists[item])
@@ -96,7 +101,7 @@ class UnifiedASTVisitor(ast.NodeVisitor):
             self._inspect_assignment([node.target], node.value, node.lineno)
         self.generic_visit(node)
 
-    def _inspect_assignment(self, targets: List[ast.AST], value: ast.AST, lineno: int) -> None:
+    def _inspect_assignment(self, targets: list[ast.AST], value: ast.AST, lineno: int) -> None:
         # Track list assignments for tool alias resolution
         if isinstance(value, (ast.List, ast.Tuple)):
             for target in targets:
@@ -164,9 +169,9 @@ class UnifiedASTVisitor(ast.NodeVisitor):
         self.generic_visit(node)
 
     def _inspect_lambda(self, node: ast.Lambda, node_name: str, lineno: int) -> AgentDef:
-        llm_calls: List[LLMCallSite] = []
-        prompts_used: Set[str] = set()
-        tools_bound: Set[str] = set()
+        llm_calls: list[LLMCallSite] = []
+        prompts_used: set[str] = set()
+        tools_bound: set[str] = set()
 
         for child in ast.walk(node):
             if isinstance(child, ast.Call):
@@ -238,9 +243,9 @@ class UnifiedASTVisitor(ast.NodeVisitor):
             return
 
         # Inspect body for LLM calls, prompts, and tool bindings
-        llm_calls: List[LLMCallSite] = []
-        prompts_used: Set[str] = set()
-        tools_bound: Set[str] = set()
+        llm_calls: list[LLMCallSite] = []
+        prompts_used: set[str] = set()
+        tools_bound: set[str] = set()
 
         for child in ast.walk(node):
             if isinstance(child, ast.Call):
@@ -288,15 +293,19 @@ def parse_and_scan_file(
     path = Path(file_path)
     if not path.is_file():
         return FileScanResult(
-            errors=[ScanError(file_path=file_path, error_type="FileNotFound", message="File does not exist")]
+            errors=[
+                ScanError(
+                    file_path=file_path,
+                    error_type="FileNotFound",
+                    message="File does not exist",
+                )
+            ]
         )
 
     try:
         source = path.read_text(encoding="utf-8", errors="replace")
     except Exception as e:
-        return FileScanResult(
-            errors=[ScanError(file_path=file_path, error_type="ReadError", message=str(e))]
-        )
+        return FileScanResult(errors=[ScanError(file_path=file_path, error_type="ReadError", message=str(e))])
 
     try:
         tree = ast.parse(source, filename=file_path)
@@ -322,8 +331,8 @@ def parse_and_scan_file(
     visitor.visit(tree)
 
     # Gather graphs and tool nodes from framework scanners
-    all_graphs: List[GraphInfo] = []
-    all_tool_nodes: List[ToolNodeDef] = []
+    all_graphs: list[GraphInfo] = []
+    all_tool_nodes: list[ToolNodeDef] = []
     for scanner in framework_registry.get_all():
         all_graphs.extend(scanner.get_graphs())
         if hasattr(scanner, "tool_nodes"):
@@ -349,4 +358,3 @@ def scan_python_file(file_path: str) -> FileScanResult:
         llm_registry=LLMRegistry(),
         observability_registry=ObservabilityRegistry(),
     )
-

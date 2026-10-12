@@ -1,14 +1,14 @@
 """Unit tests for individual modular LLM provider detectors."""
 
 import ast
-import pytest
-from cz.detectors.llm.openai import OpenAIDetector
+
 from cz.detectors.llm.anthropic import AnthropicDetector
 from cz.detectors.llm.google import GoogleDetector
-from cz.detectors.llm.groq import GroqDetector
 from cz.detectors.llm.grok import GrokDetector
+from cz.detectors.llm.groq import GroqDetector
 from cz.detectors.llm.langchain import LangChainLLMDetector
 from cz.detectors.llm.litellm import LiteLLMDetector
+from cz.detectors.llm.openai import OpenAIDetector
 
 
 def _parse_call(code: str) -> ast.Call:

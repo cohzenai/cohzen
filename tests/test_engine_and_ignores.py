@@ -1,7 +1,6 @@
 """Tests for repository traversal engine, ignore patterns, syntax error handling, and cross-referencing."""
 
 from pathlib import Path
-import pytest
 
 from cz.scanner.engine import scan_repository
 
@@ -16,7 +15,14 @@ builder = StateGraph(dict)
 """)
 
     # Create ignored directories with python files that shouldn't be scanned
-    for ignored_name in [".git", "node_modules", ".venv", "__pycache__", "build", "dist"]:
+    for ignored_name in [
+        ".git",
+        "node_modules",
+        ".venv",
+        "__pycache__",
+        "build",
+        "dist",
+    ]:
         ign_dir = tmp_path / ignored_name
         ign_dir.mkdir()
         (ign_dir / "ignored.py").write_text("""

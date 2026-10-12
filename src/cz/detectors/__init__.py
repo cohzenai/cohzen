@@ -1,6 +1,11 @@
 """Framework, LLM, and Tool detectors for static code analysis."""
 
-from cz.detectors.base import BaseDetector, BaseFrameworkScanner, BaseLLMDetector, BaseToolDetector
+from cz.detectors.base import (
+    BaseDetector,
+    BaseFrameworkScanner,
+    BaseLLMDetector,
+    BaseToolDetector,
+)
 from cz.detectors.langgraph.scanner import LangGraphScanner
 from cz.detectors.llm.registry import LLMRegistry
 from cz.detectors.registry import FrameworkRegistry
@@ -12,7 +17,7 @@ __all__ = [
     "BaseLLMDetector",
     "BaseToolDetector",
     "FrameworkRegistry",
-    "LangGraphScanner",
     "LLMRegistry",
+    "LangGraphScanner",
     "ToolDetector",
 ]

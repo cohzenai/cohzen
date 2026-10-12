@@ -2,6 +2,7 @@
 
 import asyncio
 from pathlib import Path
+
 import pytest
 
 from cz.execution.context import (
@@ -120,14 +121,20 @@ def test_observe_decorator_async(clean_store: SQLiteExecutionStore):
 def test_record_reason_and_observe_reasoning(clean_store: SQLiteExecutionStore):
     from cz.execution.context import record_reason
 
-    @observe(name="tool_lookup", kind="tool", reason=lambda q: f"Querying knowledge base for {q}")
+    @observe(
+        name="tool_lookup",
+        kind="tool",
+        reason=lambda q: f"Querying knowledge base for {q}",
+    )
     def lookup(q: str) -> str:
         return f"answer for {q}"
 
-    with execution_scope(graph_id="reason_flow", reason="User asked about refund policy") as ex:
-        with span_scope(name="planner_node", kind="node") as s:
-            record_reason("Classified query as billing dispute requiring escalation")
-            res = lookup("refund status")
+    with (
+        execution_scope(graph_id="reason_flow", reason="User asked about refund policy") as ex,
+        span_scope(name="planner_node", kind="node"),
+    ):
+        record_reason("Classified query as billing dispute requiring escalation")
+        lookup("refund status")
 
     saved_ex = clean_store.get_execution(ex.id)
     assert saved_ex.reason == "User asked about refund policy"

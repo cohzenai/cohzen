@@ -2,12 +2,11 @@
 
 import json
 from pathlib import Path
-import pytest
+
 from typer.testing import CliRunner
 
 from cz.cli import app
 from cz.formatters.console import print_console_report
-from cz.formatters.json_fmt import format_json
 from cz.formatters.mermaid import format_mermaid
 from cz.scanner.engine import scan_repository
 
@@ -80,6 +79,7 @@ def test_format_mermaid_empty_result(tmp_path: Path):
 
 def test_print_console_report_empty(tmp_path: Path):
     from rich.console import Console
+
     res = scan_repository(str(tmp_path))
     file_console = Console(record=True)
     print_console_report(res, console=file_console)
@@ -132,6 +132,7 @@ def test_mermaid_langgraph_structure_elements():
 
 def test_html_viewer_generation():
     from cz.formatters.viewer import generate_viewer_html
+
     res = scan_repository(str(SAMPLE_DIR))
     html = generate_viewer_html(res)
     assert "<!DOCTYPE html>" in html
@@ -142,6 +143,7 @@ def test_html_viewer_generation():
 
 def test_cli_view_invocations(monkeypatch):
     import cz.formatters.viewer
+
     opened = []
     monkeypatch.setattr(cz.formatters.viewer.webbrowser, "open", lambda url: opened.append(url))
 
@@ -179,6 +181,26 @@ def test_cli_audit_json():
     assert "agent_instrumentation_pct" in data
 
 
+def test_cli_audit_ci_gate(tmp_path: Path):
+    # 1. Passes with min-coverage <= 14.3
+    res_pass = runner.invoke(app, ["audit", str(SAMPLE_DIR), "--min-coverage", "10", "--fail-on-missing"])
+    assert res_pass.exit_code == 0
+
+    # 2. Fails when min-coverage requirement is higher than actual (e.g. 50%)
+    res_fail = runner.invoke(app, ["audit", str(SAMPLE_DIR), "--min-coverage", "50"])
+    assert res_fail.exit_code == 1
+    assert "CI Gate Failure" in res_fail.stdout
+    assert "threshold of 50.0%" in res_fail.stdout
+
+    # 3. Fails when fail-on-missing is enabled on an empty project
+    empty_dir = tmp_path / "empty_repo"
+    empty_dir.mkdir()
+    res_missing = runner.invoke(app, ["audit", str(empty_dir), "--fail-on-missing"])
+    assert res_missing.exit_code == 1
+    assert "CI Gate Failure" in res_missing.stdout
+    assert "No LLM observability package" in res_missing.stdout
+
+
 def test_manifest_normalized_model_and_sorting():
     res = scan_repository(str(SAMPLE_DIR))
     manifest = res.to_manifest()
@@ -213,5 +235,3 @@ def test_manifest_normalized_model_and_sorting():
     assert tool_ids == sorted(tool_ids)
     model_ids = [m.id for m in manifest.models]
     assert model_ids == sorted(model_ids)
-
-

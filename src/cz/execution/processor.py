@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from typing import Any, Dict, List, Optional, Protocol, Set
+from typing import Any, Protocol
 
 
 class DataProcessor(Protocol):
@@ -24,7 +24,7 @@ class NoopProcessor:
 class RedactionProcessor:
     """Processor that redacts known sensitive keys and credential patterns."""
 
-    DEFAULT_SENSITIVE_KEYS: Set[str] = {
+    DEFAULT_SENSITIVE_KEYS: set[str] = {
         "api_key",
         "apikey",
         "secret",
@@ -47,7 +47,7 @@ class RedactionProcessor:
         re.compile(r"ghp_[a-zA-Z0-9]{30,}", re.IGNORECASE),
     ]
 
-    def __init__(self, sensitive_keys: Optional[Set[str]] = None, mask: str = "[REDACTED]"):
+    def __init__(self, sensitive_keys: set[str] | None = None, mask: str = "[REDACTED]"):
         self.sensitive_keys = {k.lower() for k in (sensitive_keys or self.DEFAULT_SENSITIVE_KEYS)}
         self.mask = mask
 
@@ -62,7 +62,7 @@ class RedactionProcessor:
             return self._process_str(value)
         return value
 
-    def _process_dict(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def _process_dict(self, data: dict[str, Any]) -> dict[str, Any]:
         result = {}
         for key, val in data.items():
             key_str = str(key).lower()

@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import ast
-from typing import List, Optional
-from cz.scanner.utils import ast_to_str, extract_list_of_strings
+
 from cz.scanner.models import LLMCallSite, ToolsBoundInfo
+from cz.scanner.utils import ast_to_str, extract_list_of_strings
 
 
 class GrokDetector:
@@ -14,11 +14,11 @@ class GrokDetector:
     def __init__(self) -> None:
         self.provider_name = "grok"
 
-    def detect_call(self, call: ast.Call, file_path: str, lineno: int) -> Optional[LLMCallSite]:
+    def detect_call(self, call: ast.Call, file_path: str, lineno: int) -> LLMCallSite | None:
         func_str = ast_to_str(call.func)
         if ("chat.completions.create" in func_str) and any(k in func_str.lower() for k in ("xai", "grok")):
             model_name = None
-            tools_list: List[str] = []
+            tools_list: list[str] = []
             arg_summary = ast_to_str(call.args[0]) if call.args else None
 
             for kw in call.keywords:
@@ -41,6 +41,6 @@ class GrokDetector:
         return None
 
     def detect_tools_bound(
-        self, targets: List[ast.AST], value: ast.AST, file_path: str, lineno: int
-    ) -> Optional[ToolsBoundInfo]:
+        self, targets: list[ast.AST], value: ast.AST, file_path: str, lineno: int
+    ) -> ToolsBoundInfo | None:
         return None

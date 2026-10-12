@@ -1,14 +1,13 @@
 """Tests for observability package detection, environment scanning, and telemetry gap analysis."""
 
 from pathlib import Path
-import pytest
 
-from cz.scanner.models import AgentDef, LLMCallSite, ToolDef
 from cz.audit import (
     audit_observability,
     scan_env_files,
     scan_manifest_files,
 )
+from cz.scanner.models import AgentDef, LLMCallSite, ToolDef
 
 
 def test_manifest_file_detection(tmp_path: Path):

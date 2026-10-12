@@ -6,14 +6,13 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Dict, List, Optional
 
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 
-from cz.scanner.models import AgentDef, GraphInfo, ScanResult, ToolDef
+from cz.scanner.models import GraphInfo, ScanResult, ToolDef
 
 
 def print_console_report(result: ScanResult, console: Console | None = None) -> None:
@@ -26,10 +25,16 @@ def print_console_report(result: ScanResult, console: Console | None = None) -> 
     summary_text.append("Scanned Target: ", style="bold cyan")
     summary_text.append(f"{result.target_path}\n", style="white")
     summary_text.append("Frameworks:     ", style="bold cyan")
-    frameworks_str = ", ".join(f"[bold green]✓ {f}[/bold green]" for f in result.frameworks_detected) or "[bold green]✓ LangGraph[/bold green]"
+    frameworks_str = (
+        ", ".join(f"[bold green]✓ {f}[/bold green]" for f in result.frameworks_detected)
+        or "[bold green]✓ LangGraph[/bold green]"
+    )
     summary_text.append(Text.from_markup(f"{frameworks_str}\n"))
     summary_text.append("Files Examined: ", style="bold cyan")
-    summary_text.append(f"{result.files_scanned} total ({result.python_files_count} Python files)\n", style="white")
+    summary_text.append(
+        f"{result.files_scanned} total ({result.python_files_count} Python files)\n",
+        style="white",
+    )
     summary_text.append("Scan Duration:  ", style="bold cyan")
     summary_text.append(f"{result.scan_duration_ms:.2f} ms\n\n", style="green")
 
@@ -84,7 +89,9 @@ def print_console_report(result: ScanResult, console: Console | None = None) -> 
         if graph.is_compiled and graph.compile_info:
             c = graph.compile_info
             compile_rel_path = _get_relative_path(c.file_path, result.target_path)
-            status_parts.append(f"[bold green]✔ COMPILED[/bold green] -> variable: [bold white]{c.compiled_var}[/bold white] [dim]at {compile_rel_path}:{c.line_number}[/dim]")
+            status_parts.append(
+                f"[bold green]✔ COMPILED[/bold green] -> variable: [bold white]{c.compiled_var}[/bold white] [dim]at {compile_rel_path}:{c.line_number}[/dim]"
+            )
             if c.checkpointer:
                 status_parts.append(f"  Checkpointer: [magenta]{c.checkpointer}[/magenta]")
             if c.interrupt_before:
@@ -94,7 +101,9 @@ def print_console_report(result: ScanResult, console: Console | None = None) -> 
             if c.store:
                 status_parts.append(f"  Store: [cyan]{c.store}[/cyan]")
         else:
-            status_parts.append(f"[bold red]✖ NOT COMPILED[/bold red] [dim](Defined at {rel_path}:{graph.line_number})[/dim]")
+            status_parts.append(
+                f"[bold red]✖ NOT COMPILED[/bold red] [dim](Defined at {rel_path}:{graph.line_number})[/dim]"
+            )
 
         console.print(
             Panel(
@@ -133,7 +142,9 @@ def print_console_report(result: ScanResult, console: Console | None = None) -> 
                     agent = node.agent_def
                     agent_rel = _get_relative_path(agent.file_path, result.target_path)
                     if node.handler.startswith("lambda") or "lambda" in node.handler:
-                        def_loc = f"[bold cyan]λ[/bold cyan] (inline lambda) [dim]({agent_rel}:{agent.line_start})[/dim]"
+                        def_loc = (
+                            f"[bold cyan]λ[/bold cyan] (inline lambda) [dim]({agent_rel}:{agent.line_start})[/dim]"
+                        )
                     else:
                         def_loc = f"{node.handler} [dim]({agent_rel}:{agent.line_start}-{agent.line_end})[/dim]"
 
@@ -234,7 +245,7 @@ def print_console_report(result: ScanResult, console: Console | None = None) -> 
 
         for tool in result.tool_definitions:
             tool_rel = _get_relative_path(tool.file_path, result.target_path)
-            doc = (tool.docstring.split("\n")[0] if tool.docstring else "[dim]No docstring[/dim]")
+            doc = tool.docstring.split("\n")[0] if tool.docstring else "[dim]No docstring[/dim]"
             if len(doc) > 60:
                 doc = doc[:57] + "..."
 
@@ -256,10 +267,14 @@ def print_console_report(result: ScanResult, console: Console | None = None) -> 
         ext_lines = []
         for n in manifest.nodes:
             if n.resolution.reason == "external_import" and n.resolution.package:
-                ext_lines.append(f"  • Node [bold white]'{n.name}'[/bold white] handler imported from [bold cyan]'{n.resolution.package}'[/bold cyan]")
+                ext_lines.append(
+                    f"  • Node [bold white]'{n.name}'[/bold white] handler imported from [bold cyan]'{n.resolution.package}'[/bold cyan]"
+                )
         for t in manifest.tools:
             if t.resolution.reason == "external_import" and t.resolution.package:
-                ext_lines.append(f"  • Tool [bold white]'{t.name}'[/bold white] imported from [bold cyan]'{t.resolution.package}'[/bold cyan]")
+                ext_lines.append(
+                    f"  • Tool [bold white]'{t.name}'[/bold white] imported from [bold cyan]'{t.resolution.package}'[/bold cyan]"
+                )
 
         if ext_lines:
             console.print(
@@ -322,9 +337,11 @@ def print_console_report(result: ScanResult, console: Console | None = None) -> 
     else:
         status_line = "[bold green]✓ Architecture discovered[/bold green]"
 
-    console.print(Text.from_markup(
-        f"{counts_str}\n{status_line}{ext_suffix}  [dim]• Run [bold cyan]cz audit[/bold cyan] to inspect observability coverage and telemetry.[/dim]\n"
-    ))
+    console.print(
+        Text.from_markup(
+            f"{counts_str}\n{status_line}{ext_suffix}  [dim]• Run [bold cyan]cz audit[/bold cyan] to inspect observability coverage and telemetry.[/dim]\n"
+        )
+    )
 
 
 def print_audit_report(result: ScanResult, console: Console | None = None) -> None:
@@ -339,9 +356,10 @@ def print_audit_report(result: ScanResult, console: Console | None = None) -> No
 
     # --- 1. Audit Header Panel ---
     from cz.audit.registry import ObservabilityRegistry
+
     obs_reg = ObservabilityRegistry()
 
-    obs_lines: List[str] = [
+    obs_lines: list[str] = [
         f"[bold cyan]Scanned Target:[/bold cyan]    {result.target_path}",
         f"[bold cyan]Files Examined:[/bold cyan]    {result.files_scanned} total ({result.python_files_count} Python files)",
         f"[bold cyan]Scan Duration:[/bold cyan]     {result.scan_duration_ms:.2f} ms\n",
@@ -352,7 +370,9 @@ def print_audit_report(result: ScanResult, console: Console | None = None) -> No
         tools_str = ", ".join(f"[bold green]✔ {t}[/bold green]" for t in obs.tools_detected)
         obs_lines.append(f"[bold cyan]Observability Tools:[/bold cyan]  {tools_str}")
     else:
-        obs_lines.append("[bold cyan]Observability Tools:[/bold cyan]  [yellow]None detected across manifests, env, or code[/yellow]")
+        obs_lines.append(
+            "[bold cyan]Observability Tools:[/bold cyan]  [yellow]None detected across manifests, env, or code[/yellow]"
+        )
 
     # Telemetry packages
     if obs.packages:
@@ -362,17 +382,23 @@ def print_audit_report(result: ScanResult, console: Console | None = None) -> No
         )
         obs_lines.append(f"[bold cyan]Telemetry Packages:[/bold cyan]  {pkgs_str}")
     else:
-        obs_lines.append("[bold cyan]Telemetry Packages:[/bold cyan]  [yellow]None detected in package manifests[/yellow]")
+        obs_lines.append(
+            "[bold cyan]Telemetry Packages:[/bold cyan]  [yellow]None detected in package manifests[/yellow]"
+        )
 
     # Telemetry environment variables
     if obs.env_vars:
         envs_str = ", ".join(f"[bold green]{e}[/bold green]" for e in obs.env_vars)
         obs_lines.append(f"[bold cyan]Environment Config:[/bold cyan]  {envs_str}")
     else:
-        obs_lines.append("[bold cyan]Environment Config:[/bold cyan]  [yellow]No tracing environment variables found in .env files[/yellow]")
+        obs_lines.append(
+            "[bold cyan]Environment Config:[/bold cyan]  [yellow]No tracing environment variables found in .env files[/yellow]"
+        )
 
     # Coverage
-    agent_color = "green" if obs.agent_instrumentation_pct >= 80 else "yellow" if obs.agent_instrumentation_pct > 0 else "red"
+    agent_color = (
+        "green" if obs.agent_instrumentation_pct >= 80 else "yellow" if obs.agent_instrumentation_pct > 0 else "red"
+    )
     tool_color = "green" if obs.total_tools == 0 or obs.instrumented_tools > 0 else "yellow"
     obs_lines.append(
         f"[bold cyan]Tracing Coverage:[/bold cyan]    Nodes: [{agent_color}]{obs.instrumented_agents}/{obs.total_agents} ({obs.agent_instrumentation_pct}%)[/{agent_color}]  •  Tools: [{tool_color}]{obs.instrumented_tools}/{obs.total_tools}[/{tool_color}]"
@@ -489,11 +515,13 @@ def _get_relative_path(file_path: str, base_path: str) -> str:
         return os.path.basename(file_path)
 
 
-def _build_terminal_graph_flow(graph: GraphInfo, scan_result: ScanResult | None = None, show_tracing: bool = False) -> Panel:
+def _build_terminal_graph_flow(
+    graph: GraphInfo, scan_result: ScanResult | None = None, show_tracing: bool = False
+) -> Panel:
     """Builds an ASCII/Unicode visual flowchart representation of the LangGraph topology in the CLI."""
     from cz.formatters.mermaid import _format_checkpointer_label
 
-    flow_lines: List[str] = []
+    flow_lines: list[str] = []
 
     # 1. Checkpointer Persistence Banner
     if graph.is_compiled and graph.compile_info and graph.compile_info.checkpointer:
@@ -513,7 +541,7 @@ def _build_terminal_graph_flow(graph: GraphInfo, scan_result: ScanResult | None 
     flow_lines.append("     │")
     flow_lines.append("     ▼")
 
-    tool_defs_map: Dict[str, ToolDef] = {}
+    tool_defs_map: dict[str, ToolDef] = {}
     if scan_result and scan_result.tool_definitions:
         tool_defs_map = {t.name: t for t in scan_result.tool_definitions}
 
@@ -526,7 +554,7 @@ def _build_terminal_graph_flow(graph: GraphInfo, scan_result: ScanResult | None 
         )
 
         if is_tool:
-            tools_list: List[str] = []
+            tools_list: list[str] = []
             if node.tool_node_def and node.tool_node_def.tools:
                 tools_list = node.tool_node_def.tools
             elif "ToolNode(" in node.handler:
@@ -534,11 +562,19 @@ def _build_terminal_graph_flow(graph: GraphInfo, scan_result: ScanResult | None 
                 tools_list = [t.strip() for t in inner.split(",") if t.strip()]
             tools_str = ", ".join(tools_list) if tools_list else "runtime tools"
 
-            flow_lines.append(f"  ╔══ [bold yellow]🛠️ {node.name}[/bold yellow] [dim](ToolNode)[/dim] ═══════════════════════════════╗")
+            flow_lines.append(
+                f"  ╔══ [bold yellow]🛠️ {node.name}[/bold yellow] [dim](ToolNode)[/dim] ═══════════════════════════════╗"
+            )
             flow_lines.append(f"  ║  [dim]Tools:[/dim] [bold white]{tools_str}[/bold white]")
             if show_tracing:
-                inst_count = sum(1 for t in tools_list if tool_defs_map.get(t, None) and tool_defs_map[t].is_instrumented)
-                obs_str = f"[bold green]✔ {inst_count}/{len(tools_list)} instrumented[/bold green]" if inst_count > 0 else "[dim]⚪ untraced[/dim]"
+                inst_count = sum(
+                    1 for t in tools_list if tool_defs_map.get(t, None) and tool_defs_map[t].is_instrumented
+                )
+                obs_str = (
+                    f"[bold green]✔ {inst_count}/{len(tools_list)} instrumented[/bold green]"
+                    if inst_count > 0
+                    else "[dim]⚪ untraced[/dim]"
+                )
                 flow_lines.append(f"  ║  [dim]Tracing:[/dim] {obs_str}")
             flow_lines.append("  ╚══════════════════════════════════════════════════════╝")
             if node.handler.startswith("lambda") or "lambda" in node.handler:
@@ -556,7 +592,7 @@ def _build_terminal_graph_flow(graph: GraphInfo, scan_result: ScanResult | None 
 
             llm_summary = "[dim]None (logic/router)[/dim]"
             if node.agent_def and node.agent_def.llm_calls:
-                call_parts: List[str] = []
+                call_parts: list[str] = []
                 for c in node.agent_def.llm_calls:
                     if c.model_name:
                         call_parts.append(f"{c.provider}/{c.model_name}")
@@ -569,10 +605,13 @@ def _build_terminal_graph_flow(graph: GraphInfo, scan_result: ScanResult | None 
             tools_b = ""
             if node.agent_def and node.agent_def.tools_bound:
                 from rich.markup import escape
+
                 escaped_tools = escape(f"[{', '.join(node.agent_def.tools_bound)}]")
                 tools_b = f"  │  [dim]🛠️ Tools:[/dim] [magenta]{escaped_tools}[/magenta]"
 
-            flow_lines.append(f"  ┌── [bold cyan]🤖 {node.name}[/bold cyan]{handler_str}{interrupt_str} ──────────────────────┐")
+            flow_lines.append(
+                f"  ┌── [bold cyan]🤖 {node.name}[/bold cyan]{handler_str}{interrupt_str} ──────────────────────┐"
+            )
             flow_lines.append(f"  │  [dim]🧠 LLM:[/dim] {llm_summary}")
             if tools_b:
                 flow_lines.append(tools_b.rstrip())
@@ -591,15 +630,31 @@ def _build_terminal_graph_flow(graph: GraphInfo, scan_result: ScanResult | None 
                 if edge.edge_type == "conditional":
                     if edge.conditional_mapping:
                         for cond_val, target in edge.conditional_mapping.items():
-                            dest_label = "[bold white on red] ● END [/bold white on red]" if target in ("END", "__end__") else f"[bold]{target}[/bold]"
+                            dest_label = (
+                                "[bold white on red] ● END [/bold white on red]"
+                                if target in ("END", "__end__")
+                                else f"[bold]{target}[/bold]"
+                            )
                             flow_lines.append(f"     ├── [magenta]? route: '{cond_val}'[/magenta] ──► {dest_label}")
                     else:
-                        dest_label = "[bold white on red] ● END [/bold white on red]" if edge.target in ("END", "__end__") else f"[bold]{edge.target}[/bold]"
-                        flow_lines.append(f"     ├── [magenta]? {edge.condition_fn or 'condition'}[/magenta] ──► {dest_label}")
-                elif edge.edge_type == "finish_point" or edge.target in ("END", "__end__"):
+                        dest_label = (
+                            "[bold white on red] ● END [/bold white on red]"
+                            if edge.target in ("END", "__end__")
+                            else f"[bold]{edge.target}[/bold]"
+                        )
+                        flow_lines.append(
+                            f"     ├── [magenta]? {edge.condition_fn or 'condition'}[/magenta] ──► {dest_label}"
+                        )
+                elif edge.edge_type == "finish_point" or edge.target in (
+                    "END",
+                    "__end__",
+                ):
                     flow_lines.append("     └──► [bold white on red] ● END [/bold white on red]")
                 else:
-                    if idx < len(graph.nodes) - 1 and edge.target in (graph.nodes[idx + 1].name, graph.nodes[idx + 1].handler):
+                    if idx < len(graph.nodes) - 1 and edge.target in (
+                        graph.nodes[idx + 1].name,
+                        graph.nodes[idx + 1].handler,
+                    ):
                         flow_lines.append("     │")
                         flow_lines.append("     ▼")
                     else:

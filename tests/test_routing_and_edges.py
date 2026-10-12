@@ -1,7 +1,6 @@
 """Tests for graph topology: direct edges, conditional branches, entry/finish points, and chained calls."""
 
 from pathlib import Path
-import pytest
 
 from cz.scanner import scan_python_file
 

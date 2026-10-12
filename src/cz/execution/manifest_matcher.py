@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
-from typing import Dict, Optional
 
 from cz.manifest.schema import CohzenManifest
 
@@ -12,16 +10,16 @@ from cz.manifest.schema import CohzenManifest
 class ManifestMatcher:
     """Loads a project's Cohzen Manifest to link runtime spans to static AST entities."""
 
-    def __init__(self, manifest_path: Optional[Path | str] = None):
+    def __init__(self, manifest_path: Path | str | None = None):
         self.manifest_path = self._find_manifest(manifest_path)
-        self.manifest: Optional[CohzenManifest] = None
-        self._node_ids: Dict[str, str] = {}
-        self._tool_ids: Dict[str, str] = {}
-        self._model_ids: Dict[str, str] = {}
-        self._graph_ids: Dict[str, str] = {}
+        self.manifest: CohzenManifest | None = None
+        self._node_ids: dict[str, str] = {}
+        self._tool_ids: dict[str, str] = {}
+        self._model_ids: dict[str, str] = {}
+        self._graph_ids: dict[str, str] = {}
         self._load()
 
-    def _find_manifest(self, explicit_path: Optional[Path | str]) -> Optional[Path]:
+    def _find_manifest(self, explicit_path: Path | str | None) -> Path | None:
         if explicit_path:
             p = Path(explicit_path)
             if p.is_file():
@@ -79,7 +77,7 @@ class ManifestMatcher:
             return self._tool_ids[tool_name]
         return f"tool.{tool_name}"
 
-    def resolve_model_entity_id(self, model_name: str, provider: Optional[str] = None) -> str:
+    def resolve_model_entity_id(self, model_name: str, provider: str | None = None) -> str:
         """Resolve an LLM entity ID (e.g. 'model.openai.gpt-4o')."""
         if model_name in self._model_ids:
             return self._model_ids[model_name]

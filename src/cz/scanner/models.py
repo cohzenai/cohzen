@@ -2,85 +2,111 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any
+
 from pydantic import BaseModel, Field, computed_field
 
 
 class CompileInfo(BaseModel):
     """Information about where and how an agentic workflow/graph is compiled."""
+
     compiled_var: str = Field(description="Variable assigned to the compiled graph/app (e.g. 'app')")
     file_path: str = Field(description="Path to the file where .compile() is called")
     line_number: int = Field(description="Line number of .compile() call")
-    checkpointer: Optional[str] = Field(default=None, description="Checkpointer argument if provided")
-    interrupt_before: List[str] = Field(default_factory=list, description="Nodes flagged for interrupt_before")
-    interrupt_after: List[str] = Field(default_factory=list, description="Nodes flagged for interrupt_after")
-    store: Optional[str] = Field(default=None, description="Store argument if provided")
+    checkpointer: str | None = Field(default=None, description="Checkpointer argument if provided")
+    interrupt_before: list[str] = Field(default_factory=list, description="Nodes flagged for interrupt_before")
+    interrupt_after: list[str] = Field(default_factory=list, description="Nodes flagged for interrupt_after")
+    store: str | None = Field(default=None, description="Store argument if provided")
 
 
 class PromptDef(BaseModel):
     """Information about a prompt definition."""
+
     var_name: str = Field(description="Variable name assigned to the prompt")
     template_type: str = Field(description="Type: ChatPromptTemplate, PromptTemplate, SystemMessage, etc.")
-    snippet: Optional[str] = Field(default=None, description="Prompt text preview or template structure")
+    snippet: str | None = Field(default=None, description="Prompt text preview or template structure")
     file_path: str = Field(description="File where prompt is defined")
     line_number: int = Field(description="Line number where prompt is defined")
 
 
 class ToolsBoundInfo(BaseModel):
     """Information about tools bound to a model (e.g. bind_tools or tools=[...])."""
+
     model_var: str = Field(description="Variable name of the model being bound")
-    tools: List[str] = Field(default_factory=list, description="List of tools bound to the model")
-    provider: str = Field(default="unknown", description="Provider/framework: langchain, openai, groq, etc.")
+    tools: list[str] = Field(default_factory=list, description="List of tools bound to the model")
+    provider: str = Field(
+        default="unknown",
+        description="Provider/framework: langchain, openai, groq, etc.",
+    )
     file_path: str = Field(description="File where tools binding occurred")
     line_number: int = Field(description="Line number where tools binding occurred")
 
 
 class ToolNodeDef(BaseModel):
     """Information about a ToolNode instance."""
+
     var_name: str = Field(description="Variable or node name for the ToolNode")
-    tools: List[str] = Field(default_factory=list, description="List of tool references assigned")
+    tools: list[str] = Field(default_factory=list, description="List of tool references assigned")
     file_path: str = Field(description="File where ToolNode is defined")
     line_number: int = Field(description="Line number where ToolNode is defined")
 
 
 class LLMCallSite(BaseModel):
     """Information about where an LLM is called inside an agent or script."""
-    provider: str = Field(default="unknown", description="Provider: openai, anthropic, google, groq, grok, langchain, litellm")
+
+    provider: str = Field(
+        default="unknown",
+        description="Provider: openai, anthropic, google, groq, grok, langchain, litellm",
+    )
     caller_var: str = Field(description="Variable name of the model, chain, or client invoked")
     method: str = Field(description="Method invoked (e.g. 'invoke', 'ainvoke', 'stream', 'chat.completions.create')")
-    model_name: Optional[str] = Field(default=None, description="Model identifier if specified (e.g. 'gpt-4o', 'claude-3-5-sonnet')")
-    input_arg: Optional[str] = Field(default=None, description="Argument or state passed into the call")
-    tools_bound: List[str] = Field(default_factory=list, description="Tools passed in call parameters (e.g. tools=[...])")
+    model_name: str | None = Field(
+        default=None,
+        description="Model identifier if specified (e.g. 'gpt-4o', 'claude-3-5-sonnet')",
+    )
+    input_arg: str | None = Field(default=None, description="Argument or state passed into the call")
+    tools_bound: list[str] = Field(
+        default_factory=list,
+        description="Tools passed in call parameters (e.g. tools=[...])",
+    )
     file_path: str = Field(description="File where LLM call occurs")
     line_number: int = Field(description="Line number of the LLM call")
 
 
 class ToolDef(BaseModel):
     """Information about a tool function definition."""
+
     name: str = Field(description="Tool function name")
     file_path: str = Field(description="File path where tool is defined")
     line_start: int = Field(description="Starting line number of function")
     line_end: int = Field(description="Ending line number of function")
-    docstring: Optional[str] = Field(default=None, description="Tool docstring description")
+    docstring: str | None = Field(default=None, description="Tool docstring description")
     has_tool_decorator: bool = Field(default=True, description="Whether decorated with @tool")
     is_instrumented: bool = Field(default=False, description="Whether tool has observability decorator/tracing")
-    telemetry_decorators: List[str] = Field(default_factory=list, description="Tracing decorators detected")
+    telemetry_decorators: list[str] = Field(default_factory=list, description="Tracing decorators detected")
 
 
 class NodeDef(BaseModel):
     """Information about a node/function definition in an agentic system."""
+
     name: str = Field(description="Node handler/function name")
     file_path: str = Field(description="File path where node function is defined")
     line_start: int = Field(description="Starting line number of function")
     line_end: int = Field(description="Ending line number of function")
     is_async: bool = Field(default=False, description="Whether node function is async")
-    docstring: Optional[str] = Field(default=None, description="Function docstring")
-    role: str = Field(default="node", description="Derived role: agent, tool_node, router, subgraph, logic")
-    llm_calls: List[LLMCallSite] = Field(default_factory=list, description="LLM invocations inside this node")
-    prompts_used: List[str] = Field(default_factory=list, description="Prompt templates referenced or piped")
-    tools_bound: List[str] = Field(default_factory=list, description="Bound tools referenced by this node")
+    docstring: str | None = Field(default=None, description="Function docstring")
+    role: str = Field(
+        default="node",
+        description="Derived role: agent, tool_node, router, subgraph, logic",
+    )
+    llm_calls: list[LLMCallSite] = Field(default_factory=list, description="LLM invocations inside this node")
+    prompts_used: list[str] = Field(default_factory=list, description="Prompt templates referenced or piped")
+    tools_bound: list[str] = Field(default_factory=list, description="Bound tools referenced by this node")
     is_instrumented: bool = Field(default=False, description="Whether node function has observability decorator")
-    telemetry_decorators: List[str] = Field(default_factory=list, description="Tracing decorators (e.g., @traceable, @observe)")
+    telemetry_decorators: list[str] = Field(
+        default_factory=list,
+        description="Tracing decorators (e.g., @traceable, @observe)",
+    )
 
 
 # Backward-compatible alias
@@ -89,63 +115,86 @@ AgentDef = NodeDef
 
 class NodeInfo(BaseModel):
     """Information about an agent/node registered in an agentic graph."""
+
     name: str = Field(description="Identifier of the node/agent in the graph")
     handler: str = Field(description="Target function, runnable, or tool handler")
     file_path: str = Field(description="File where node is added")
     line_number: int = Field(description="Line number where node is added")
-    is_subgraph: bool = Field(default=False, description="Whether this node references another compiled subgraph")
-    agent_def: Optional[AgentDef] = Field(default=None, description="Resolved agent function definition if found")
-    tool_node_def: Optional[ToolNodeDef] = Field(default=None, description="Resolved ToolNode definition if this node is a ToolNode")
+    is_subgraph: bool = Field(
+        default=False,
+        description="Whether this node references another compiled subgraph",
+    )
+    agent_def: AgentDef | None = Field(default=None, description="Resolved agent function definition if found")
+    tool_node_def: ToolNodeDef | None = Field(
+        default=None,
+        description="Resolved ToolNode definition if this node is a ToolNode",
+    )
 
 
 class EdgeInfo(BaseModel):
     """Information about edges connecting nodes in the graph."""
+
     source: str = Field(description="Source node or START sentinel")
     target: str = Field(description="Target node, END sentinel, or condition summary")
-    edge_type: str = Field(default="direct", description="Type: direct, conditional, entry_point, finish_point")
-    condition_fn: Optional[str] = Field(default=None, description="Router/condition function for conditional edges")
-    conditional_mapping: Dict[str, str] = Field(default_factory=dict, description="Dictionary mapping of return values to next nodes")
+    edge_type: str = Field(
+        default="direct",
+        description="Type: direct, conditional, entry_point, finish_point",
+    )
+    condition_fn: str | None = Field(default=None, description="Router/condition function for conditional edges")
+    conditional_mapping: dict[str, str] = Field(
+        default_factory=dict,
+        description="Dictionary mapping of return values to next nodes",
+    )
     file_path: str = Field(description="File where edge is defined")
     line_number: int = Field(description="Line number where edge is defined")
 
 
 class GraphInfo(BaseModel):
     """Information about a detected agentic graph instance (e.g., LangGraph)."""
+
     framework: str = Field(default="langgraph", description="Agentic framework: langgraph, crewai, etc.")
     graph_var: str = Field(description="Variable name of the StateGraph/Graph builder")
-    graph_class: str = Field(default="StateGraph", description="Graph class type (e.g., StateGraph, MessageGraph)")
-    state_schema: Optional[str] = Field(default=None, description="State schema class (e.g., AgentState, MessagesState)")
+    graph_class: str = Field(
+        default="StateGraph",
+        description="Graph class type (e.g., StateGraph, MessageGraph)",
+    )
+    state_schema: str | None = Field(default=None, description="State schema class (e.g., AgentState, MessagesState)")
     file_path: str = Field(description="Path to the file defining the graph")
     line_number: int = Field(description="Line number where graph is initialized")
     is_compiled: bool = Field(default=False, description="Whether .compile() was called on this graph")
-    compile_info: Optional[CompileInfo] = Field(default=None, description="Compilation metadata if compiled")
-    nodes: List[NodeInfo] = Field(default_factory=list, description="List of nodes/agents added to this graph")
-    edges: List[EdgeInfo] = Field(default_factory=list, description="List of edges and routes in this graph")
+    compile_info: CompileInfo | None = Field(default=None, description="Compilation metadata if compiled")
+    nodes: list[NodeInfo] = Field(default_factory=list, description="List of nodes/agents added to this graph")
+    edges: list[EdgeInfo] = Field(default_factory=list, description="List of edges and routes in this graph")
 
     @property
-    def agent_names(self) -> List[str]:
+    def agent_names(self) -> list[str]:
         return [node.name for node in self.nodes]
 
 
 class ObservabilityPackage(BaseModel):
     """Detected observability or telemetry package."""
+
     name: str = Field(description="Package name (e.g. 'langsmith', 'langfuse')")
     provider_id: str = Field(description="Provider identifier (e.g. 'langsmith', 'langfuse')")
     category: str = Field(description="Category: Tracing, Metrics, Evaluation, APM")
     source_file: str = Field(description="File where detected (e.g. 'pyproject.toml', 'requirements.txt')")
-    version_spec: Optional[str] = Field(default=None, description="Version constraint or specifier if declared")
+    version_spec: str | None = Field(default=None, description="Version constraint or specifier if declared")
 
 
 class ObservabilityAudit(BaseModel):
     """Repository-wide observability and instrumentation audit."""
-    packages: List[ObservabilityPackage] = Field(default_factory=list, description="Detected telemetry packages")
-    env_vars: List[str] = Field(default_factory=list, description="Detected telemetry environment variables")
-    tools_detected: List[str] = Field(default_factory=list, description="All observability tools/providers detected across manifests, env, and code")
+
+    packages: list[ObservabilityPackage] = Field(default_factory=list, description="Detected telemetry packages")
+    env_vars: list[str] = Field(default_factory=list, description="Detected telemetry environment variables")
+    tools_detected: list[str] = Field(
+        default_factory=list,
+        description="All observability tools/providers detected across manifests, env, and code",
+    )
     total_agents: int = 0
     instrumented_agents: int = 0
     total_tools: int = 0
     instrumented_tools: int = 0
-    recommendations: List[str] = Field(default_factory=list, description="Observability gap analysis & recommendations")
+    recommendations: list[str] = Field(default_factory=list, description="Observability gap analysis & recommendations")
 
     @computed_field
     @property
@@ -162,6 +211,7 @@ class ObservabilityAudit(BaseModel):
 
 class ScanError(BaseModel):
     """Information about any file parsing errors encountered during the scan."""
+
     file_path: str
     error_type: str
     message: str
@@ -169,20 +219,25 @@ class ScanError(BaseModel):
 
 class ScanResult(BaseModel):
     """Aggregate result of a repository scan."""
+
     target_path: str
     files_scanned: int = 0
     python_files_count: int = 0
     scan_duration_ms: float = 0.0
-    frameworks_detected: List[str] = Field(default_factory=list, description="List of detected agentic frameworks")
-    graphs: List[GraphInfo] = Field(default_factory=list)
-    agent_definitions: List[AgentDef] = Field(default_factory=list, description="All agent function definitions detected")
-    tool_definitions: List[ToolDef] = Field(default_factory=list, description="All @tool functions detected")
-    tool_nodes: List[ToolNodeDef] = Field(default_factory=list, description="All ToolNode instances detected")
-    tools_bound: List[ToolsBoundInfo] = Field(default_factory=list, description="All tools binding calls detected")
-    prompts: List[PromptDef] = Field(default_factory=list, description="All prompt definitions detected")
-    import_sources: Dict[str, str] = Field(default_factory=dict, description="Imported symbols mapped to module/package")
-    observability: Optional[ObservabilityAudit] = Field(default=None, description="Observability audit result")
-    errors: List[ScanError] = Field(default_factory=list)
+    frameworks_detected: list[str] = Field(default_factory=list, description="List of detected agentic frameworks")
+    graphs: list[GraphInfo] = Field(default_factory=list)
+    agent_definitions: list[AgentDef] = Field(
+        default_factory=list, description="All agent function definitions detected"
+    )
+    tool_definitions: list[ToolDef] = Field(default_factory=list, description="All @tool functions detected")
+    tool_nodes: list[ToolNodeDef] = Field(default_factory=list, description="All ToolNode instances detected")
+    tools_bound: list[ToolsBoundInfo] = Field(default_factory=list, description="All tools binding calls detected")
+    prompts: list[PromptDef] = Field(default_factory=list, description="All prompt definitions detected")
+    import_sources: dict[str, str] = Field(
+        default_factory=dict, description="Imported symbols mapped to module/package"
+    )
+    observability: ObservabilityAudit | None = Field(default=None, description="Observability audit result")
+    errors: list[ScanError] = Field(default_factory=list)
 
     @computed_field
     @property
@@ -207,29 +262,38 @@ class ScanResult(BaseModel):
     def to_manifest(self) -> Any:
         """Converts ScanResult into the standardized Cohzen Manifest v0.1 specification."""
         from datetime import datetime, timezone
+
         from cz.manifest.schema import (
             CohzenManifest,
             CompilationDef,
             EdgeDef,
             GraphDef,
             ManifestMetadata,
-            ModelDef as ManifestModelDef,
             NodeClassification,
-            NodeDef as ManifestNodeDef,
             ResolutionDef,
             SourceLocation,
+        )
+        from cz.manifest.schema import (
+            ModelDef as ManifestModelDef,
+        )
+        from cz.manifest.schema import (
+            NodeDef as ManifestNodeDef,
+        )
+        from cz.manifest.schema import (
             ToolDef as ManifestToolDef,
         )
 
-        manifest_tools: Dict[str, ManifestToolDef] = {}
-        manifest_models: Dict[str, ManifestModelDef] = {}
-        manifest_nodes: Dict[str, ManifestNodeDef] = {}
-        manifest_graphs: List[GraphDef] = []
+        manifest_tools: dict[str, ManifestToolDef] = {}
+        manifest_models: dict[str, ManifestModelDef] = {}
+        manifest_nodes: dict[str, ManifestNodeDef] = {}
+        manifest_graphs: list[GraphDef] = []
 
         # 1. Populate registered tools
         for t in self.tool_definitions:
             tool_id = f"tool.{t.name}"
-            loc = SourceLocation(file=t.file_path, line_start=t.line_start, line_end=t.line_end) if t.file_path else None
+            loc = (
+                SourceLocation(file=t.file_path, line_start=t.line_start, line_end=t.line_end) if t.file_path else None
+            )
             manifest_tools[tool_id] = ManifestToolDef(
                 id=tool_id,
                 name=t.name,
@@ -241,14 +305,14 @@ class ScanResult(BaseModel):
         # 2. Populate graphs, nodes, and referenced models/tools
         for g in self.graphs:
             graph_id = f"graph.{g.graph_var}"
-            node_ids_in_graph: List[str] = []
+            node_ids_in_graph: list[str] = []
 
             for n in g.nodes:
                 node_id = n.name
                 node_ids_in_graph.append(node_id)
 
                 # Identify referenced models
-                node_model_ids: List[str] = []
+                node_model_ids: list[str] = []
                 if n.agent_def:
                     for call in n.agent_def.llm_calls:
                         model_name_or_caller = call.model_name or call.caller_var or "default"
@@ -256,7 +320,15 @@ class ScanResult(BaseModel):
                         if m_id not in node_model_ids:
                             node_model_ids.append(m_id)
                         if m_id not in manifest_models:
-                            m_loc = SourceLocation(file=call.file_path, line_start=call.line_number, line_end=call.line_number) if call.file_path else None
+                            m_loc = (
+                                SourceLocation(
+                                    file=call.file_path,
+                                    line_start=call.line_number,
+                                    line_end=call.line_number,
+                                )
+                                if call.file_path
+                                else None
+                            )
                             manifest_models[m_id] = ManifestModelDef(
                                 id=m_id,
                                 provider=call.provider,
@@ -265,8 +337,8 @@ class ScanResult(BaseModel):
                             )
 
                 # Identify referenced tools
-                node_tool_ids: List[str] = []
-                referenced_tool_names: List[str] = []
+                node_tool_ids: list[str] = []
+                referenced_tool_names: list[str] = []
                 if n.tool_node_def and n.tool_node_def.tools:
                     referenced_tool_names.extend(n.tool_node_def.tools)
                 elif n.agent_def and n.agent_def.tools_bound:
@@ -279,7 +351,11 @@ class ScanResult(BaseModel):
                     if t_id not in manifest_tools:
                         pkg = self.import_sources.get(t_name)
                         if pkg:
-                            tool_res = ResolutionDef(status="unresolved", reason="external_import", package=pkg)
+                            tool_res = ResolutionDef(
+                                status="unresolved",
+                                reason="external_import",
+                                package=pkg,
+                            )
                         else:
                             tool_res = ResolutionDef(status="unresolved", reason="missing_symbol")
                         manifest_tools[t_id] = ManifestToolDef(
@@ -291,9 +367,7 @@ class ScanResult(BaseModel):
                         )
 
                 # Handler resolution
-                if n.agent_def or n.tool_node_def:
-                    resolution = ResolutionDef(status="resolved")
-                elif n.handler in ("START", "END", "__start__", "__end__"):
+                if n.agent_def or n.tool_node_def or n.handler in ("START", "END", "__start__", "__end__"):
                     resolution = ResolutionDef(status="resolved")
                 elif "lambda" in n.handler:
                     # Lambda is an inline function definition, fully resolved
@@ -308,7 +382,7 @@ class ScanResult(BaseModel):
 
                 # Optional heuristic classification (non-authoritative)
                 classification = None
-                evidence: List[str] = []
+                evidence: list[str] = []
                 if n.tool_node_def or "toolnode" in n.handler.lower():
                     evidence.append("tool_node_handler")
                     classification = NodeClassification(role="tool_node", confidence="high", evidence=evidence)
@@ -324,7 +398,11 @@ class ScanResult(BaseModel):
                 elif "lambda" in n.handler:
                     classification = NodeClassification(role="logic", confidence="high", evidence=["inline_lambda"])
                 elif "router" in n.name.lower() or "route" in n.handler.lower():
-                    classification = NodeClassification(role="router", confidence="medium", evidence=["naming_convention"])
+                    classification = NodeClassification(
+                        role="router",
+                        confidence="medium",
+                        evidence=["naming_convention"],
+                    )
 
                 line_s = n.agent_def.line_start if n.agent_def else n.line_number
                 line_e = n.agent_def.line_end if n.agent_def else n.line_number
@@ -344,9 +422,17 @@ class ScanResult(BaseModel):
                 )
 
             # Edges
-            m_edges: List[EdgeDef] = []
+            m_edges: list[EdgeDef] = []
             for e in g.edges:
-                e_loc = SourceLocation(file=e.file_path, line_start=e.line_number, line_end=e.line_number) if e.file_path else None
+                e_loc = (
+                    SourceLocation(
+                        file=e.file_path,
+                        line_start=e.line_number,
+                        line_end=e.line_number,
+                    )
+                    if e.file_path
+                    else None
+                )
                 m_edges.append(
                     EdgeDef(
                         source=e.source,
@@ -363,7 +449,15 @@ class ScanResult(BaseModel):
             compilation_def = None
             if g.is_compiled and g.compile_info:
                 c = g.compile_info
-                c_loc = SourceLocation(file=c.file_path, line_start=c.line_number, line_end=c.line_number) if c.file_path else None
+                c_loc = (
+                    SourceLocation(
+                        file=c.file_path,
+                        line_start=c.line_number,
+                        line_end=c.line_number,
+                    )
+                    if c.file_path
+                    else None
+                )
                 compilation_def = CompilationDef(
                     compiled_var=c.compiled_var,
                     checkpointer=c.checkpointer,
@@ -373,7 +467,11 @@ class ScanResult(BaseModel):
                     source=c_loc,
                 )
 
-            g_loc = SourceLocation(file=g.file_path, line_start=g.line_number, line_end=g.line_number) if g.file_path else None
+            g_loc = (
+                SourceLocation(file=g.file_path, line_start=g.line_number, line_end=g.line_number)
+                if g.file_path
+                else None
+            )
             manifest_graphs.append(
                 GraphDef(
                     id=graph_id,
@@ -398,9 +496,9 @@ class ScanResult(BaseModel):
         external_nodes = [n for n in sorted_nodes if n.resolution.reason == "external_import"]
         external_tools = [t for t in sorted_tools if t.resolution.reason == "external_import"]
         external_imports_count = len(external_nodes) + len(external_tools)
-        external_packages = sorted(list({
-            x.resolution.package for x in (external_nodes + external_tools) if x.resolution.package
-        }))
+        external_packages = sorted(
+            list({x.resolution.package for x in (external_nodes + external_tools) if x.resolution.package})
+        )
 
         # Analysis limitations and warnings
         unresolved_nodes_count = sum(1 for n in sorted_nodes if n.resolution.status == "unresolved")
@@ -408,14 +506,20 @@ class ScanResult(BaseModel):
         total_unresolved = unresolved_nodes_count + unresolved_tools_count
         dynamic_count = sum(1 for n in sorted_nodes if n.resolution.status == "partially_resolved")
 
-        warnings: List[str] = []
+        warnings: list[str] = []
         if unresolved_nodes_count > 0:
             if external_packages:
-                warnings.append(f"{unresolved_nodes_count} node handler(s) imported from external libraries ({', '.join(external_packages)}).")
+                warnings.append(
+                    f"{unresolved_nodes_count} node handler(s) imported from external libraries ({', '.join(external_packages)})."
+                )
             else:
-                warnings.append(f"{unresolved_nodes_count} node handler(s) could not be statically resolved to local definitions (external imports).")
+                warnings.append(
+                    f"{unresolved_nodes_count} node handler(s) could not be statically resolved to local definitions (external imports)."
+                )
         if unresolved_tools_count > 0:
-            warnings.append(f"{unresolved_tools_count} tool reference(s) lack local function definitions (external imports).")
+            warnings.append(
+                f"{unresolved_tools_count} tool reference(s) lack local function definitions (external imports)."
+            )
         if dynamic_count > 0:
             warnings.append(f"{dynamic_count} dynamic node/tool expression(s) encountered.")
         if len(self.errors) > 0:
@@ -444,4 +548,3 @@ class ScanResult(BaseModel):
             models=sorted_models,
             metadata=metadata,
         )
-

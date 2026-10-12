@@ -5,9 +5,10 @@ from __future__ import annotations
 import os
 import time
 from pathlib import Path
-from typing import Dict, List, Set
 
-from cz.scanner.visitor import FileScanResult, parse_and_scan_file
+from cz.audit.registry import ObservabilityRegistry
+from cz.detectors.llm.registry import LLMRegistry
+from cz.detectors.registry import FrameworkRegistry
 from cz.scanner.models import (
     AgentDef,
     GraphInfo,
@@ -18,12 +19,9 @@ from cz.scanner.models import (
     ToolNodeDef,
     ToolsBoundInfo,
 )
-from cz.detectors.base import BaseFrameworkScanner
-from cz.detectors.registry import FrameworkRegistry
-from cz.detectors.llm.registry import LLMRegistry
-from cz.audit.registry import ObservabilityRegistry
+from cz.scanner.visitor import parse_and_scan_file
 
-DEFAULT_IGNORED_DIRS: Set[str] = {
+DEFAULT_IGNORED_DIRS: set[str] = {
     ".git",
     ".github",
     ".venv",
@@ -97,14 +95,14 @@ def scan_repository(
         )
         return result
 
-    all_graphs: List[GraphInfo] = []
-    all_agent_defs: List[AgentDef] = []
-    all_tool_defs: List[ToolDef] = []
-    all_tool_nodes: List[ToolNodeDef] = []
-    all_tools_bound: List[ToolsBoundInfo] = []
-    all_prompts: List[PromptDef] = []
-    all_import_sources: Dict[str, str] = {}
-    all_errors: List[ScanError] = []
+    all_graphs: list[GraphInfo] = []
+    all_agent_defs: list[AgentDef] = []
+    all_tool_defs: list[ToolDef] = []
+    all_tool_nodes: list[ToolNodeDef] = []
+    all_tools_bound: list[ToolsBoundInfo] = []
+    all_prompts: list[PromptDef] = []
+    all_import_sources: dict[str, str] = {}
+    all_errors: list[ScanError] = []
 
     if path.is_file():
         result.files_scanned = 1
@@ -130,7 +128,12 @@ def scan_repository(
                 if file.endswith(".py"):
                     result.python_files_count += 1
                     file_path = os.path.join(root, file)
-                    file_res = parse_and_scan_file(file_path, framework_registry, llm_registry, observability_registry)
+                    file_res = parse_and_scan_file(
+                        file_path,
+                        framework_registry,
+                        llm_registry,
+                        observability_registry,
+                    )
                     all_graphs.extend(file_res.graphs)
                     all_agent_defs.extend(file_res.agent_defs)
                     all_tool_defs.extend(file_res.tool_defs)
@@ -142,11 +145,11 @@ def scan_repository(
 
     # Cross-reference: Link graph nodes to their corresponding AgentDef or ToolNodeDef
     # Prefer exact match within the same file, fallback to repository-wide name match
-    file_agent_map: Dict[tuple[str, str], AgentDef] = {(a.file_path, a.name): a for a in all_agent_defs}
-    repo_agent_map: Dict[str, AgentDef] = {a.name: a for a in all_agent_defs}
+    file_agent_map: dict[tuple[str, str], AgentDef] = {(a.file_path, a.name): a for a in all_agent_defs}
+    repo_agent_map: dict[str, AgentDef] = {a.name: a for a in all_agent_defs}
 
-    file_tool_node_map: Dict[tuple[str, str], ToolNodeDef] = {(t.file_path, t.var_name): t for t in all_tool_nodes}
-    repo_tool_node_map: Dict[str, ToolNodeDef] = {t.var_name: t for t in all_tool_nodes}
+    file_tool_node_map: dict[tuple[str, str], ToolNodeDef] = {(t.file_path, t.var_name): t for t in all_tool_nodes}
+    repo_tool_node_map: dict[str, ToolNodeDef] = {t.var_name: t for t in all_tool_nodes}
 
     for graph in all_graphs:
         for node in graph.nodes:
@@ -167,14 +170,13 @@ def scan_repository(
                 )
 
     # Cross-reference model tool bindings with agent calls
-    model_tools_map: Dict[tuple[str, str], List[str]] = {(b.file_path, b.model_var): b.tools for b in all_tools_bound}
-    repo_model_tools_map: Dict[str, List[str]] = {b.model_var: b.tools for b in all_tools_bound}
+    model_tools_map: dict[tuple[str, str], list[str]] = {(b.file_path, b.model_var): b.tools for b in all_tools_bound}
+    repo_model_tools_map: dict[str, list[str]] = {b.model_var: b.tools for b in all_tools_bound}
 
     for agent in all_agent_defs:
         for call in agent.llm_calls:
-            bound_tools = (
-                model_tools_map.get((agent.file_path, call.caller_var))
-                or repo_model_tools_map.get(call.caller_var)
+            bound_tools = model_tools_map.get((agent.file_path, call.caller_var)) or repo_model_tools_map.get(
+                call.caller_var
             )
             if bound_tools:
                 for t in bound_tools:
@@ -188,7 +190,8 @@ def scan_repository(
     registered_handlers.update({node.name for g in all_graphs for node in g.nodes})
 
     active_agent_defs = [
-        a for a in all_agent_defs
+        a
+        for a in all_agent_defs
         if a.name in registered_handlers or a.llm_calls or a.tools_bound or a.prompts_used or a.is_instrumented
     ]
 

@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import ast
-from typing import List, Optional, Protocol, Set
+from typing import Protocol
+
 from cz.scanner.models import GraphInfo, LLMCallSite, ToolDef, ToolsBoundInfo
 
 
 class BaseDetector(Protocol):
     """General base protocol for all AST detectors."""
-    pass
 
 
 class BaseFrameworkScanner(Protocol):
@@ -24,7 +24,7 @@ class BaseFrameworkScanner(Protocol):
         """Reset internal visitor state for a new file."""
         ...
 
-    def visit_assign(self, targets: List[ast.AST], value: ast.AST, lineno: int) -> None:
+    def visit_assign(self, targets: list[ast.AST], value: ast.AST, lineno: int) -> None:
         """Called for Assign and AnnAssign AST nodes."""
         ...
 
@@ -36,7 +36,7 @@ class BaseFrameworkScanner(Protocol):
         """Called for Return AST nodes."""
         ...
 
-    def get_graphs(self) -> List[GraphInfo]:
+    def get_graphs(self) -> list[GraphInfo]:
         """Return all graphs detected in the current file."""
         ...
 
@@ -49,13 +49,13 @@ class BaseLLMDetector(Protocol):
         """Identifier for the provider (e.g. 'openai', 'anthropic', 'google')."""
         ...
 
-    def detect_call(self, call: ast.Call, file_path: str, lineno: int) -> Optional[LLMCallSite]:
+    def detect_call(self, call: ast.Call, file_path: str, lineno: int) -> LLMCallSite | None:
         """Inspect an AST Call node and return an LLMCallSite if this provider was invoked."""
         ...
 
     def detect_tools_bound(
-        self, targets: List[ast.AST], value: ast.AST, file_path: str, lineno: int
-    ) -> Optional[ToolsBoundInfo]:
+        self, targets: list[ast.AST], value: ast.AST, file_path: str, lineno: int
+    ) -> ToolsBoundInfo | None:
         """Inspect an assignment to detect if tools were bound to a model."""
         ...
 
@@ -64,7 +64,10 @@ class BaseToolDetector(Protocol):
     """Protocol for detecting tool definitions and tool nodes."""
 
     def detect_tool(
-        self, node: ast.FunctionDef | ast.AsyncFunctionDef, file_path: str, known_decorators: Set[str]
-    ) -> Optional[ToolDef]:
+        self,
+        node: ast.FunctionDef | ast.AsyncFunctionDef,
+        file_path: str,
+        known_decorators: set[str],
+    ) -> ToolDef | None:
         """Inspect a function node to detect whether it is an agent tool."""
         ...

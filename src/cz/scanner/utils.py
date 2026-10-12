@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import ast
-from typing import Dict, List, Optional
 
 
 def ast_to_str(node: ast.AST | None) -> str:
@@ -43,7 +42,7 @@ def ast_to_str(node: ast.AST | None) -> str:
         return str(type(node).__name__)
 
 
-def extract_list_of_strings(node: ast.AST | None) -> List[str]:
+def extract_list_of_strings(node: ast.AST | None) -> list[str]:
     """Extract a list of string literals or identifiers from an AST List/Tuple."""
     if not node:
         return []
@@ -52,11 +51,11 @@ def extract_list_of_strings(node: ast.AST | None) -> List[str]:
     return [ast_to_str(node).strip("'\"")]
 
 
-def extract_dict_mapping(node: ast.AST | None) -> Dict[str, str]:
+def extract_dict_mapping(node: ast.AST | None) -> dict[str, str]:
     """Extract a mapping from an AST Dict node."""
     if not isinstance(node, ast.Dict):
         return {}
-    mapping: Dict[str, str] = {}
+    mapping: dict[str, str] = {}
     for k, v in zip(node.keys, node.values):
         k_str = ast_to_str(k).strip("'\"")
         v_str = ast_to_str(v).strip("'\"")
@@ -64,9 +63,9 @@ def extract_dict_mapping(node: ast.AST | None) -> Dict[str, str]:
     return mapping
 
 
-def get_decorator_names(decorator_list: List[ast.AST]) -> List[str]:
+def get_decorator_names(decorator_list: list[ast.AST]) -> list[str]:
     """Extract decorator base names (e.g. 'tool', 'traceable', 'observe')."""
-    names: List[str] = []
+    names: list[str] = []
     for d in decorator_list:
         if isinstance(d, ast.Name):
             names.append(d.id)

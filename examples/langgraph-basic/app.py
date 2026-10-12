@@ -1,20 +1,25 @@
 from typing import TypedDict
-from langgraph.graph import StateGraph, START, END
+
 from langgraph.checkpoint.memory import MemorySaver
+from langgraph.graph import END, START, StateGraph
+
 
 class ProcessState(TypedDict):
     input_text: str
     processed_text: str
     step_count: int
 
+
 def validate_input(state: ProcessState) -> dict:
     """Validate incoming query."""
     return {"step_count": state.get("step_count", 0) + 1}
+
 
 def transform_data(state: ProcessState) -> dict:
     """Format and normalize text."""
     text = state.get("input_text", "").strip()
     return {"processed_text": text.upper()}
+
 
 # Build workflow
 builder = StateGraph(ProcessState)
