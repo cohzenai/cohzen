@@ -19,6 +19,18 @@ And **`cz audit`** consumes the exact same discovered AST facts to perform in-de
 
 ---
 
+## 🚀 Installation
+
+```bash
+pip install cohzen
+# or with uv:
+uv add cohzen
+```
+
+*Note: Once installed, both `cz` and `cohzen` commands are available.*
+
+---
+
 ## 🏗️ Production-Grade Modular Architecture
 
 The repository is organized into distinct, enterprise-grade domain packages:

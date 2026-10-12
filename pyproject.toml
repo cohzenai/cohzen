@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "cz-cli"
+name = "cohzen"
 version = "0.2.0"
 description = "Fast, static scanner for LangGraph architectures: detecting compiled graphs, agents, and routing edges."
 readme = "README.md"
@@ -39,6 +39,7 @@ dev = [
 
 [project.scripts]
 cz = "cz.cli.main:app"
+cohzen = "cz.cli.main:app"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/cz"]
