@@ -1,26 +1,34 @@
 """Sample LangGraph: Multi-agent system with conditional routing and human-in-the-loop interrupt."""
 
 from typing import TypedDict
-from langgraph.graph import StateGraph, START, END
+
+from langgraph.graph import END, START, StateGraph
+
 
 class RouterState(TypedDict):
     task: str
     decision: str
 
+
 def supervisor_agent(state: RouterState):
     return {"decision": "code"}
+
 
 def researcher_agent(state: RouterState):
     return {"task": "researched info"}
 
+
 def coder_agent(state: RouterState):
     return {"task": "implemented code"}
+
 
 def reviewer_agent(state: RouterState):
     return {"task": "approved"}
 
+
 def route_decision(state: RouterState):
     return state.get("decision", "finish")
+
 
 builder = StateGraph(RouterState)
 builder.add_node("supervisor", supervisor_agent)
@@ -36,7 +44,7 @@ builder.add_conditional_edges(
         "research": "researcher",
         "code": "coder",
         "finish": END,
-    }
+    },
 )
 builder.add_edge("researcher", "supervisor")
 builder.add_edge("coder", "reviewer")

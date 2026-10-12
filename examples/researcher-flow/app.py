@@ -15,10 +15,10 @@ from typing import List, Literal, TypedDict
 
 from langgraph.graph import END, START, StateGraph
 
-
 # ============================================================================
 # State Definition
 # ============================================================================
+
 
 class ResearcherState(TypedDict):
     topic: str
@@ -34,6 +34,7 @@ class ResearcherState(TypedDict):
 # ============================================================================
 # Dummy LLM Functions (Plain Python functions)
 # ============================================================================
+
 
 def dummy_llm_clarify_analysis(topic: str) -> dict:
     """Analyze whether the research query requires user clarification."""
@@ -100,6 +101,7 @@ def dummy_llm_generate_report(topic: str, brief: str, notes: List[str]) -> str:
 # Dummy Tools (Plain Python functions)
 # ============================================================================
 
+
 def tool_web_search(query: str) -> str:
     """Simulate native web search tool."""
     time.sleep(0.09)
@@ -115,6 +117,7 @@ def tool_think(reflection: str) -> str:
 # ============================================================================
 # Graph Nodes
 # ============================================================================
+
 
 def clarify_query(state: ResearcherState) -> dict:
     """Analyze input prompt to determine if user clarification is required."""
@@ -236,6 +239,7 @@ app.name = "researcher_flow"
 # ============================================================================
 # Interactive Demo Runner
 # ============================================================================
+
 
 def run_demo() -> None:
     print("━" * 60)

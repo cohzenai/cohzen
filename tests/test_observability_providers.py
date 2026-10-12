@@ -1,6 +1,5 @@
 """Unit tests for individual modular observability provider detectors."""
 
-import pytest
 from cz.audit.agentops import AgentOpsDetector
 from cz.audit.arize_phoenix import ArizePhoenixDetector
 from cz.audit.langfuse import LangfuseDetector

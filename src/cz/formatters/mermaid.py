@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import Dict, List, Optional
+
 from cz.scanner.models import GraphInfo, ScanResult, ToolDef
 
 
@@ -27,7 +27,11 @@ def _escape_mermaid(text: str) -> str:
     """Escapes double quotes, special characters, and non-whitelisted angle brackets for Mermaid."""
     escaped = text.replace('"', "'").replace("\n", " ").strip()
     # Strip angle brackets from non-formatting tags like <return>, <dynamic>, <lambda>, <unknown>
-    return re.sub(r"<(?!/?(?:b|i|br\b))[^>]*>", lambda m: m.group(0).replace("<", "").replace(">", ""), escaped)
+    return re.sub(
+        r"<(?!/?(?:b|i|br\b))[^>]*>",
+        lambda m: m.group(0).replace("<", "").replace(">", ""),
+        escaped,
+    )
 
 
 def _format_checkpointer_label(checkpointer_str: str, file_path: str = "") -> str:
@@ -44,9 +48,9 @@ def _format_checkpointer_label(checkpointer_str: str, file_path: str = "") -> st
     return cp
 
 
-def generate_graph_mermaid(graph: GraphInfo, scan_result: Optional[ScanResult] = None) -> str:
+def generate_graph_mermaid(graph: GraphInfo, scan_result: ScanResult | None = None) -> str:
     """Generates enriched Mermaid flowchart markup for a LangGraph workflow."""
-    lines: List[str] = [
+    lines: list[str] = [
         "%% ========================================================",
         f"%% LangGraph Architecture: {graph.graph_var} ({graph.graph_class})",
         f"%% State Schema: {graph.state_schema or 'Implicit/TypedDict'}",
@@ -54,14 +58,16 @@ def generate_graph_mermaid(graph: GraphInfo, scan_result: Optional[ScanResult] =
     ]
 
     # Tool definitions lookup for observability inspection
-    tool_defs_map: Dict[str, ToolDef] = {}
+    tool_defs_map: dict[str, ToolDef] = {}
     if scan_result and scan_result.tool_definitions:
         tool_defs_map = {t.name: t for t in scan_result.tool_definitions}
 
     if graph.is_compiled and graph.compile_info:
         cp_summary = graph.compile_info.checkpointer or "None"
         compiled_target = (graph.compile_info.compiled_var or "").replace("<", "").replace(">", "")
-        lines.append(f"%% Compiled at line {graph.compile_info.line_number} -> {compiled_target} (Checkpointer: {cp_summary})")
+        lines.append(
+            f"%% Compiled at line {graph.compile_info.line_number} -> {compiled_target} (Checkpointer: {cp_summary})"
+        )
     lines.append("%% ========================================================")
     lines.append("flowchart TD")
 
@@ -70,18 +76,18 @@ def generate_graph_mermaid(graph: GraphInfo, scan_result: Optional[ScanResult] =
     lines.append("    __end__([● END]):::sentinelNode")
 
     # 2. Checkpointer / State Persistence Node
-    has_checkpointer = False
     if graph.is_compiled and graph.compile_info and graph.compile_info.checkpointer:
-        has_checkpointer = True
         cp_label = _format_checkpointer_label(graph.compile_info.checkpointer, graph.file_path)
         cp_label = _escape_mermaid(cp_label)
-        lines.append(f"    checkpointer[\"💾 Checkpointer<br/><b>{cp_label}</b><br/><i>State Persistence</i>\"]:::checkpointerNode")
+        lines.append(
+            f'    checkpointer["💾 Checkpointer<br/><b>{cp_label}</b><br/><i>State Persistence</i>"]:::checkpointerNode'
+        )
         lines.append("    checkpointer -.->|state persistence| __start__")
 
     if graph.is_compiled and graph.compile_info and graph.compile_info.store:
         store_label = _format_checkpointer_label(graph.compile_info.store, graph.file_path)
         store_label = _escape_mermaid(store_label)
-        lines.append(f"    store[\"🗄️ Store<br/><b>{store_label}</b><br/><i>Shared Memory</i>\"]:::checkpointerNode")
+        lines.append(f'    store["🗄️ Store<br/><b>{store_label}</b><br/><i>Shared Memory</i>"]:::checkpointerNode')
         lines.append("    store -.->|shared store| __start__")
 
     # 3. Nodes (Agents, ToolNodes, Routers)
@@ -97,7 +103,7 @@ def generate_graph_mermaid(graph: GraphInfo, scan_result: Optional[ScanResult] =
 
         if is_tool_node:
             # Resolve tools inside ToolNode
-            tools_list: List[str] = []
+            tools_list: list[str] = []
             if node.tool_node_def and node.tool_node_def.tools:
                 tools_list = node.tool_node_def.tools
             elif "ToolNode(" in node.handler:
@@ -120,11 +126,11 @@ def generate_graph_mermaid(graph: GraphInfo, scan_result: Optional[ScanResult] =
                 obs_badge = "⚪ Tracing: uninstrumented"
 
             lines.append(
-                f"    {node_id}[[\"🛠️ <b>{node.name}</b> (ToolNode)<br/>Tools: {tools_str}<br/>{obs_badge}\"]]:::toolNode"
+                f'    {node_id}[["🛠️ <b>{node.name}</b> (ToolNode)<br/>Tools: {tools_str}<br/>{obs_badge}"]]:::toolNode'
             )
         else:
             # Standard Agent / Node representation
-            label_parts: List[str] = [f"🤖 <b>{node.name}</b>"]
+            label_parts: list[str] = [f"🤖 <b>{node.name}</b>"]
 
             if node.handler.startswith("lambda") or "lambda" in node.handler:
                 label_parts.append("Handler: λ (inline lambda)")
@@ -143,7 +149,7 @@ def generate_graph_mermaid(graph: GraphInfo, scan_result: Optional[ScanResult] =
 
             # LLM invocations
             if node.agent_def and node.agent_def.llm_calls:
-                llm_names: List[str] = []
+                llm_names: list[str] = []
                 for call in node.agent_def.llm_calls:
                     if call.model_name:
                         llm_names.append(f"{call.provider}/{call.model_name}")
@@ -171,7 +177,7 @@ def generate_graph_mermaid(graph: GraphInfo, scan_result: Optional[ScanResult] =
                 node_class = "uninstrumentedAgent"
 
             node_label = "<br/>".join(label_parts)
-            lines.append(f"    {node_id}[\"{node_label}\"]:::{node_class}")
+            lines.append(f'    {node_id}["{node_label}"]:::{node_class}')
 
     # 4. Edges and Routing
     for edge in graph.edges:
@@ -198,11 +204,15 @@ def generate_graph_mermaid(graph: GraphInfo, scan_result: Optional[ScanResult] =
     lines.append("")
     lines.append("    %% Styling Classes (LangGraph Theme)")
     lines.append("    classDef default fill:#f8fafc,stroke:#94a3b8,stroke-width:1px,color:#0f172a;")
-    lines.append("    classDef sentinelNode fill:#f1f5f9,stroke:#475569,stroke-width:2px,color:#1e293b,font-weight:bold;")
+    lines.append(
+        "    classDef sentinelNode fill:#f1f5f9,stroke:#475569,stroke-width:2px,color:#1e293b,font-weight:bold;"
+    )
     lines.append("    classDef checkpointerNode fill:#faf5ff,stroke:#9333ea,stroke-width:2px,color:#581c87;")
     lines.append("    classDef toolNode fill:#fefce8,stroke:#ca8a04,stroke-width:2px,color:#713f12;")
     lines.append("    classDef instrumentedAgent fill:#f0fdf4,stroke:#16a34a,stroke-width:2px,color:#14532d;")
-    lines.append("    classDef uninstrumentedAgent fill:#fffbeb,stroke:#d97706,stroke-width:1.5px,stroke-dasharray: 4 2,color:#78350f;")
+    lines.append(
+        "    classDef uninstrumentedAgent fill:#fffbeb,stroke:#d97706,stroke-width:1.5px,stroke-dasharray: 4 2,color:#78350f;"
+    )
 
     return "\n".join(lines)
 
@@ -212,9 +222,8 @@ def format_mermaid(result: ScanResult) -> str:
     if not result.graphs:
         return "%% No LangGraph workflows detected."
 
-    sections: List[str] = []
+    sections: list[str] = []
     for graph in result.graphs:
         sections.append(generate_graph_mermaid(graph, scan_result=result))
 
     return "\n\n".join(sections)
-

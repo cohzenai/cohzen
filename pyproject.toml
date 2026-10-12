@@ -35,6 +35,7 @@ dependencies = [
 dev = [
     "pytest>=8.0.0",
     "pytest-cov>=4.1.0",
+    "ruff>=0.4.0",
 ]
 
 [project.scripts]
@@ -47,3 +48,22 @@ packages = ["src/cz"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+exclude = [
+    ".venv",
+    ".git",
+    "dist",
+    "build",
+    "*.ipynb",
+    "tests/fixtures",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["cz"]

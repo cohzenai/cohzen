@@ -1,17 +1,22 @@
 """Sample LangGraph: Simple agent with tools and memory saver checkpointer."""
 
-from typing import TypedDict, Annotated, List
-from langgraph.graph import StateGraph, START, END
+from typing import TypedDict
+
 from langgraph.checkpoint.memory import MemorySaver
+from langgraph.graph import END, START, StateGraph
+
 
 class AgentState(TypedDict):
-    messages: List[str]
+    messages: list[str]
+
 
 def call_model(state: AgentState):
     return {"messages": ["model response"]}
 
+
 def tool_node(state: AgentState):
     return {"messages": ["tool response"]}
+
 
 # Graph construction
 workflow = StateGraph(AgentState)

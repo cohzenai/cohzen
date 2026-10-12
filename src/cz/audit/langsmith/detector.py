@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from typing import List, Optional
+
 from cz.scanner.models import ObservabilityPackage
 
 
@@ -13,7 +13,7 @@ class LangSmithDetector:
         self.display_name = "LangSmith"
         self.category = "LLM Tracing & Evaluation"
 
-    def check_manifest(self, manifest_content: str, filename: str) -> Optional[ObservabilityPackage]:
+    def check_manifest(self, manifest_content: str, filename: str) -> ObservabilityPackage | None:
         pattern = r"(?i)(?:^|[\"'\s,])(langsmith)(?:\[[^\]]*\])?([><=~!].*)?(?:$|[\"'\s,\n])"
         match = re.search(pattern, manifest_content, re.MULTILINE)
         if match:
@@ -27,8 +27,13 @@ class LangSmithDetector:
             )
         return None
 
-    def get_known_env_vars(self) -> List[str]:
-        return ["LANGCHAIN_TRACING_V2", "LANGCHAIN_API_KEY", "LANGCHAIN_PROJECT", "LANGCHAIN_ENDPOINT"]
+    def get_known_env_vars(self) -> list[str]:
+        return [
+            "LANGCHAIN_TRACING_V2",
+            "LANGCHAIN_API_KEY",
+            "LANGCHAIN_PROJECT",
+            "LANGCHAIN_ENDPOINT",
+        ]
 
-    def get_known_decorators(self) -> List[str]:
+    def get_known_decorators(self) -> list[str]:
         return ["traceable"]

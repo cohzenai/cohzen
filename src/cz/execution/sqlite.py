@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
 import json
-from pathlib import Path
 import sqlite3
 import threading
-from typing import Any, Dict, List, Optional
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
 
 from cz.execution.models import Event, Execution, Span
 from cz.execution.processor import DataProcessor, NoopProcessor
@@ -19,7 +19,7 @@ def _json_dumps(val: Any) -> str:
     return json.dumps(val, default=str)
 
 
-def _parse_iso(val: Optional[str]) -> Optional[datetime]:
+def _parse_iso(val: str | None) -> datetime | None:
     if not val:
         return None
     try:
@@ -84,7 +84,7 @@ class SQLiteExecutionStore(ExecutionStore):
     def __init__(
         self,
         db_path: Path | str = ".cohzen/executions.db",
-        processor: Optional[DataProcessor] = None,
+        processor: DataProcessor | None = None,
     ):
         self.db_path = Path(db_path)
         self.processor: DataProcessor = processor or NoopProcessor()
@@ -145,9 +145,9 @@ class SQLiteExecutionStore(ExecutionStore):
         status: str,
         ended_at: datetime,
         duration_ms: float,
-        error: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
-        reason: Optional[str] = None,
+        error: str | None = None,
+        metadata: dict[str, Any] | None = None,
+        reason: str | None = None,
     ) -> None:
         with self._lock, self._connect() as conn:
             if metadata is not None and reason is not None:
@@ -158,7 +158,15 @@ class SQLiteExecutionStore(ExecutionStore):
                     SET status = ?, ended_at = ?, duration_ms = ?, error = ?, metadata = ?, reason = ?
                     WHERE id = ?
                     """,
-                    (status, ended_at.isoformat(), duration_ms, error, _json_dumps(processed_meta), reason, execution_id),
+                    (
+                        status,
+                        ended_at.isoformat(),
+                        duration_ms,
+                        error,
+                        _json_dumps(processed_meta),
+                        reason,
+                        execution_id,
+                    ),
                 )
             elif metadata is not None:
                 processed_meta = self.processor.process(metadata)
@@ -168,7 +176,14 @@ class SQLiteExecutionStore(ExecutionStore):
                     SET status = ?, ended_at = ?, duration_ms = ?, error = ?, metadata = ?
                     WHERE id = ?
                     """,
-                    (status, ended_at.isoformat(), duration_ms, error, _json_dumps(processed_meta), execution_id),
+                    (
+                        status,
+                        ended_at.isoformat(),
+                        duration_ms,
+                        error,
+                        _json_dumps(processed_meta),
+                        execution_id,
+                    ),
                 )
             elif reason is not None:
                 conn.execute(
@@ -177,7 +192,14 @@ class SQLiteExecutionStore(ExecutionStore):
                     SET status = ?, ended_at = ?, duration_ms = ?, error = ?, reason = ?
                     WHERE id = ?
                     """,
-                    (status, ended_at.isoformat(), duration_ms, error, reason, execution_id),
+                    (
+                        status,
+                        ended_at.isoformat(),
+                        duration_ms,
+                        error,
+                        reason,
+                        execution_id,
+                    ),
                 )
             else:
                 conn.execute(
@@ -225,10 +247,10 @@ class SQLiteExecutionStore(ExecutionStore):
         status: str,
         ended_at: datetime,
         duration_ms: float,
-        output: Optional[Any] = None,
-        error: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
-        reason: Optional[str] = None,
+        output: Any | None = None,
+        error: str | None = None,
+        metadata: dict[str, Any] | None = None,
+        reason: str | None = None,
     ) -> None:
         processed_output = self.processor.process(output)
         with self._lock, self._connect() as conn:
@@ -321,7 +343,7 @@ class SQLiteExecutionStore(ExecutionStore):
                 ),
             )
 
-    def get_execution(self, execution_id: str) -> Optional[Execution]:
+    def get_execution(self, execution_id: str) -> Execution | None:
         with self._lock, self._connect() as conn:
             # First try exact match
             cur = conn.execute("SELECT * FROM executions WHERE id = ?", (execution_id,))
@@ -339,7 +361,7 @@ class SQLiteExecutionStore(ExecutionStore):
 
             return self._row_to_execution(row)
 
-    def list_executions(self, limit: int = 50, offset: int = 0) -> List[Execution]:
+    def list_executions(self, limit: int = 50, offset: int = 0) -> list[Execution]:
         with self._lock, self._connect() as conn:
             cur = conn.execute(
                 "SELECT * FROM executions ORDER BY started_at DESC LIMIT ? OFFSET ?",
@@ -348,7 +370,7 @@ class SQLiteExecutionStore(ExecutionStore):
             rows = cur.fetchall()
             return [self._row_to_execution(r) for r in rows]
 
-    def get_spans(self, execution_id: str) -> List[Span]:
+    def get_spans(self, execution_id: str) -> list[Span]:
         with self._lock, self._connect() as conn:
             cur = conn.execute(
                 "SELECT * FROM spans WHERE execution_id = ? ORDER BY started_at ASC",
@@ -357,7 +379,7 @@ class SQLiteExecutionStore(ExecutionStore):
             rows = cur.fetchall()
             return [self._row_to_span(r) for r in rows]
 
-    def get_events(self, execution_id: str, span_id: Optional[str] = None) -> List[Event]:
+    def get_events(self, execution_id: str, span_id: str | None = None) -> list[Event]:
         with self._lock, self._connect() as conn:
             if span_id:
                 cur = conn.execute(

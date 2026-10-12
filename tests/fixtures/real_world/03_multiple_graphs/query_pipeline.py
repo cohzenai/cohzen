@@ -1,15 +1,20 @@
 from typing import TypedDict
-from langgraph.graph import StateGraph, START, END
+
+from langgraph.graph import END, START, StateGraph
+
 
 class QueryState(TypedDict):
     question: str
     answer: str
 
+
 def search_index(state: QueryState):
     return {"answer": "Found context"}
 
+
 def synthesize(state: QueryState):
     return {"answer": f"Final: {state['answer']}"}
+
 
 query_builder = StateGraph(QueryState)
 query_builder.add_node("search", search_index)

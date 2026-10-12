@@ -1,12 +1,11 @@
 """Unit tests for the cz LangGraph architecture and observability scanner."""
 
 from pathlib import Path
-import pytest
 
-from cz.scanner.engine import scan_repository
-from cz.scanner import scan_python_file
 from cz.formatters.json_fmt import format_json
 from cz.formatters.mermaid import format_mermaid
+from cz.scanner import scan_python_file
+from cz.scanner.engine import scan_repository
 
 SAMPLE_DIR = Path(__file__).parent / "fixtures" / "sample_graphs"
 

@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import List, Optional, Protocol
+from typing import Protocol
+
 from cz.scanner.models import ObservabilityPackage
 
 
@@ -24,14 +25,14 @@ class BaseObservabilityDetector(Protocol):
         """Category (e.g. 'LLM Tracing & Evaluation', 'Distributed Tracing')."""
         ...
 
-    def check_manifest(self, manifest_content: str, filename: str) -> Optional[ObservabilityPackage]:
+    def check_manifest(self, manifest_content: str, filename: str) -> ObservabilityPackage | None:
         """Check if this tool's package is listed in a dependency manifest."""
         ...
 
-    def get_known_env_vars(self) -> List[str]:
+    def get_known_env_vars(self) -> list[str]:
         """List of environment variable keys associated with this tool."""
         ...
 
-    def get_known_decorators(self) -> List[str]:
+    def get_known_decorators(self) -> list[str]:
         """List of AST decorator names indicating tracing (e.g. 'traceable', 'observe')."""
         ...

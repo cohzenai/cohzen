@@ -1,7 +1,6 @@
 """Tests for tool definitions, tool binding, and ToolNode instances."""
 
 from pathlib import Path
-import pytest
 
 from cz.scanner import scan_python_file
 

@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-from typing import List, Optional
 from rich.console import Console
 from rich.table import Table
 
 from cz.execution.models import Execution, Span
 
 
-def format_duration(duration_ms: Optional[float]) -> str:
+def format_duration(duration_ms: float | None) -> str:
     """Format duration in human-readable milliseconds or seconds."""
     if duration_ms is None:
         return "—"
@@ -30,8 +29,8 @@ def format_status_icon(status: str) -> str:
 
 
 def print_executions_table(
-    executions: List[Execution],
-    console: Optional[Console] = None,
+    executions: list[Execution],
+    console: Console | None = None,
 ) -> None:
     """Render the `cz runs` summary table."""
     c = console or Console()
@@ -74,8 +73,8 @@ def print_executions_table(
 
 def print_execution_detail(
     execution: Execution,
-    spans: List[Span],
-    console: Optional[Console] = None,
+    spans: list[Span],
+    console: Console | None = None,
     verbose: bool = False,
 ) -> None:
     """Render the detailed flow graph and stats for `cz run <execution-id>`."""
@@ -88,9 +87,7 @@ def print_execution_detail(
         "[bold green]✓ completed[/bold green]"
         if execution.status == "completed"
         else (
-            "[bold red]✗ failed[/bold red]"
-            if execution.status == "failed"
-            else "[bold yellow]● running[/bold yellow]"
+            "[bold red]✗ failed[/bold red]" if execution.status == "failed" else "[bold yellow]● running[/bold yellow]"
         )
     )
     c.print(f"[bold]Status[/bold]      {status_text}")

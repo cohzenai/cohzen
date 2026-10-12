@@ -1,15 +1,20 @@
-from typing import TypedDict, List
-from langgraph.graph import StateGraph, START, END
+from typing import TypedDict
+
+from langgraph.graph import END, START, StateGraph
+
 
 class IngestState(TypedDict):
-    raw_files: List[str]
+    raw_files: list[str]
     processed_count: int
+
 
 def parse_files(state: IngestState):
     return {"processed_count": len(state["raw_files"])}
 
+
 def embed_chunks(state: IngestState):
     return {"processed_count": state["processed_count"]}
+
 
 ingest_builder = StateGraph(IngestState)
 ingest_builder.add_node("parse", parse_files)

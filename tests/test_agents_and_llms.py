@@ -1,7 +1,6 @@
 """Tests for agent definitions, async functions, docstrings, LLM calls, prompts, and tracing."""
 
 from pathlib import Path
-import pytest
 
 from cz.scanner import scan_python_file
 
