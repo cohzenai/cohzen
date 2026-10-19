@@ -104,9 +104,12 @@ cohzen/
 | **`cz scan [path]`** | **Architecture Discovery** | Reconstructs graphs, nodes, edges, models, tools, and checkpointer persistence. Emits terminal flow or **`CohzenManifest`** JSON. |
 | **`cz audit [path]`** | **Observability Audit** | Audits telemetry packages, `.env` configurations, and node-by-node / tool-by-tool instrumentation attribution. |
 | **`cz view [path]`** | **Visualization Shortcut** | Convenience alias for `cz scan --view` to launch the interactive browser visualizer. |
-| **`cz capture -- <command>`** | **Runtime Capture** | Explicitly runs the supplied command with Cohzen capture enabled only for that process. |
-| **`cz runs [path]` / `cz run <id>`** | **Runtime Records** | Lists local execution records or displays one record's spans. |
-| **`cz init [path]`** | **Legacy Setup** | Deprecated: creates a manifest, local database, and `.gitignore` entry; it no longer installs automatic startup hooks. |
+| **`cz init [path]`** | **Always-On Setup** | Enables always-on local capture: creates configuration, telemetry DB, manifest, gitignore entry, and installs an isolated startup hook. |
+| **`cz status [path]`** | **Capture Status** | Inspects effective capture settings, project marker, startup hook status, and retention limits. |
+| **`cz on [path]` / `cz off [path]`** | **Capture Toggle** | Enables or disables always-on capture in `.cohzen/config.toml` without uninstalling hooks. |
+| **`cz deinit [path]`** | **Project Teardown** | Reverts initialization: removes startup hooks, configuration, gitignore entries, and optionally retains `executions.db` (`--keep-data`). |
+| **`cz capture -- <command>`** | **One-Off Capture** | Runs the supplied command with Cohzen capture enabled only for that single execution. |
+| **`cz runs [path]` / `cz run <id>`** | **Runtime Records** | Lists local execution records or displays one record's hierarchical spans and timings. |
 | **`cz version`** | **System Info** | Displays the installed `cz` release version. |
 
 ### 1. Architecture Discovery (`cz scan`)
@@ -140,28 +143,86 @@ cz audit . --json
 cz audit . --min-coverage 80 --fail-on-missing
 ```
 
-### 3. Explicit Runtime Capture (`cz capture`)
+### 3. Local Always-On Runtime Capture
 
-`cz capture` runs your application code. It creates a temporary Python startup bootstrap for that child process and removes it when the command exits; it does not write `sitecustomize.py` or a `.pth` file into your project or virtual environment.
+Cohzen provides **fail-open, zero-overhead, always-on capture** for local LangGraph application development. Once initialized, LangGraph graph invocations (`invoke`, `ainvoke`, `stream`, `astream`) in your project are automatically recorded to a local SQLite database without requiring code modifications.
+
+#### Initialization & Lifecycle
 
 ```bash
-cz init .                 # optional legacy setup for manifest/database creation
+# Initialize always-on capture for the current project (shows exact planned actions and confirms)
+cz init .
+
+# Apply non-interactively in automated setups
+cz init . --yes
+
+# Specify target Python environment for virtual environments
+cz init . --python /path/to/venv/bin/python
+
+# Check current capture status and retention settings
+cz status .
+
+# Temporarily disable or re-enable capture for the project
+cz off .
+cz on .
+
+# Deinitialize: remove configuration and startup hooks while retaining historical telemetry data
+cz deinit . --yes --keep-data
+
+# Full deinitialize: remove all artifacts and database
+cz deinit . --yes
+```
+
+#### Exact File Plan & Legacy Migration
+Running `cz init` plans and applies:
+1. `.cohzen/config.toml`: Project configuration and retention policies.
+2. `.cohzen/manifest.json`: Scanned architectural manifest.
+3. `.cohzen/executions.db`: Local SQLite telemetry store with WAL mode and busy timeouts.
+4. `.gitignore`: Automatically adds `.cohzen/` to prevent committing local databases.
+5. `cohzen_startup.pth`: Lightweight startup hook in target site-packages (`import cz._startup; cz._startup.start()`).
+6. **Automatic Legacy Migration**: Cleans legacy `sitecustomize.py` Cohzen blocks and replaces deprecated `cohzen.pth` files.
+
+#### Configuration (`.cohzen/config.toml`)
+
+```toml
+enabled = true
+capture_in_ci = false
+
+[retention]
+max_payload_bytes = 65536
+max_runs = 1000
+max_age_days = 30
+```
+
+#### Production Safety & Fail-Open Guarantees
+* **Unmarked Project Safety**: Skips execution unless a valid `.cohzen` directory is found (or `COHZEN_PROJECT` is set).
+* **Production & Disable Gates**: Capture is completely inert if `COHZEN_ENV=production` or `COHZEN_DISABLE=1`.
+* **CI Isolation**: Disabled in CI environments by default; requires `capture_in_ci = true`.
+* **Tool Isolation**: Avoids treating virtualenv console scripts (`bin/pytest`, `bin/ruff`, etc.) as application runs.
+* **Narrow Compiled-Graph Interception**: Wraps only public compiled graph APIs (`Pregel`, `CompiledStateGraph`, `CompiledGraph`). Builders, schemas, and `Runnable` base classes remain untouched.
+* **Non-Mutating Configs**: User-provided callback configurations and `CallbackManager` instances are never mutated in place.
+* **Asynchronous Persistence**: Telemetry writes are queued asynchronously via `AsyncExecutionStore` off the execution hot path, with bounded queues, payload snapshotting, fork-safe PID recovery, and bounded `atexit` flushing (1.0s limit).
+* **Default Redaction**: Sensitive keys (passwords, tokens, secrets, API keys) and value patterns (emails, phone numbers, bearer headers, private keys, AWS/OpenAI/GitHub keys) are redacted before persisting to disk.
+
+### 4. One-Off Runtime Capture (`cz capture`)
+
+For environments without startup hooks or for single-command runs:
+
+```bash
 cz capture -- python app.py
 cz capture -- python -m pytest
 cz runs .
 cz run <run-id>
 ```
 
-Runtime records are stored locally in `.cohzen/executions.db`. Cohzen redacts inputs, outputs, metadata, events, reasons, and error text before persistence. Defaults retain 1,000 runs for 30 days and cap each persisted payload field at 64 KiB. Override defaults in code with `RetentionPolicy(...)`, or set `COHZEN_MAX_PAYLOAD_BYTES`, `COHZEN_MAX_RUNS`, and `COHZEN_MAX_AGE_DAYS`; use `none` to disable one limit.
-
 ### Runtime Support Matrix
 
 | Dependency | Supported range | Verified in this repository | Notes |
 |---|---:|---:|---|
-| Python | `>=3.10` | 3.13.11 | Package classifiers currently list 3.10–3.12. |
-| LangGraph | `>=0.2,<1.3` | 1.2.12 | Runtime capture is opt-in; cross-version contract tests are Phase 1 work. |
-| LangChain Core | `>=0.2,<1.7` | 1.6.6 | Wrappers that replace callback configuration can prevent runtime capture. |
-| OpenTelemetry API | `>=1.20,<2` | 1.45.0 | Export requires Phase 4's SDK/exporter integration. |
+| Python | `>=3.10` | 3.10, 3.11, 3.12, 3.13 | Full automated test matrix across all 4 versions. |
+| LangGraph | `>=0.2,<1.3` | 0.2.76, 1.0.10, 1.1.10, 1.2.16 | Tested via dedicated multi-version contract matrix and daily scheduled CI. |
+| LangChain Core | `>=0.2,<1.7` | 1.6.6 | Safe copy-on-write callback propagation. |
+| OpenTelemetry API | `>=1.20,<2` | 1.45.0 | Telemetry auditing and attribute detection. |
 
 ---
 
