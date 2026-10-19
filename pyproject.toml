@@ -32,6 +32,12 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+runtime = [
+    # Optional: static scanning intentionally has no framework runtime dependency.
+    "langgraph>=0.2,<1.3",
+    "langchain-core>=0.2,<1.7",
+    "opentelemetry-api>=1.20,<2",
+]
 dev = [
     "pytest>=8.0.0",
     "pytest-cov>=4.1.0",

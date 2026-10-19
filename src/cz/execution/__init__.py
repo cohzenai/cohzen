@@ -16,7 +16,7 @@ from cz.execution.instrumentation import install, track, uninstall
 from cz.execution.manifest_matcher import ManifestMatcher
 from cz.execution.models import Event, Execution, Span
 from cz.execution.processor import DataProcessor, NoopProcessor, RedactionProcessor
-from cz.execution.sqlite import SQLiteExecutionStore
+from cz.execution.sqlite import RetentionPolicy, SQLiteExecutionStore
 from cz.execution.store import ExecutionStore
 
 __all__ = [
@@ -28,6 +28,7 @@ __all__ = [
     "ManifestMatcher",
     "NoopProcessor",
     "RedactionProcessor",
+    "RetentionPolicy",
     "SQLiteExecutionStore",
     "Span",
     "execution_scope",

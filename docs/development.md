@@ -23,7 +23,7 @@ This guide covers local environment setup, testing standards, and architecture g
 
 ## Testing
 
-Cohzen maintains a comprehensive test suite covering detectors, formats, and real-world repository fixtures.
+Cohzen currently has 88 tests covering static detectors, formatters, runtime storage/redaction, and real-world fixtures. The latest local full-suite coverage measurement is 72% on Python 3.13.11.
 
 Run all tests:
 ```bash
@@ -62,4 +62,5 @@ cz audit examples/langgraph-tools
 - `src/cz/detectors/`: Modular AST detectors separated by concern (`langgraph`, `llm`, `tools`).
 - `src/cz/manifest/`: Authoritative Pydantic schemas for the system contract.
 - `src/cz/audit/`: Telemetry inspection, package manifest checks, and gap analysis.
+- `src/cz/execution/`: Opt-in capture, callback recording, local SQLite storage, default redaction, and retention.
 - `src/cz/formatters/`: Output generation (Rich console, Mermaid, HTML viewer, JSON).

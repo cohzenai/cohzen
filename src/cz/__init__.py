@@ -4,12 +4,6 @@ from cz.execution import execution_scope, observe, record_reason, span_scope, tr
 
 __version__ = "0.2.0"
 
-# Auto-activate tracking when cz is imported
-try:
-    track()
-except Exception:
-    pass
-
 # Aliases
 reason = record_reason
 

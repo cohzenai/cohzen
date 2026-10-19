@@ -45,3 +45,32 @@ def test_redaction_processor_collections():
     assert result[0]["password"] == "[REDACTED]"
     assert result[1]["password"] == "[REDACTED]"
     assert result[2] == "plain string"
+
+
+def test_redaction_processor_redacts_common_sensitive_values_and_limits_payloads():
+    proc = RedactionProcessor(max_payload_bytes=80)
+    payload = {
+        "email": "person@example.com",
+        "phone": "+1 (415) 555-0123",
+        "github": "ghp_abcdefghijklmnopqrstuvwxyz1234567890",
+        "openai": "sk-proj-abcdefghijklmnopqrstuvwxyz1234567890",
+        "aws": "AKIAIOSFODNN7EXAMPLE",
+        "google": "AIzaabcdefghijklmnopqrstuvwxyz1234567890ABCDE",
+        "private_key": "-----BEGIN PRIVATE KEY-----\nsecret\n-----END PRIVATE KEY-----",
+        "text": "Bearer eyJhbGciOiJIUzI1NiJ9.abcdefghijklmnopqrstuvwxyz",
+    }
+
+    redacted = proc.process(payload)
+    serialized = str(redacted)
+    assert "person@example.com" not in serialized
+    assert "415) 555" not in serialized
+    assert "ghp_" not in serialized
+    assert "sk-proj" not in serialized
+    assert "AKIA" not in serialized
+    assert "AIza" not in serialized
+    assert "BEGIN PRIVATE KEY" not in serialized
+    assert "Bearer ey" not in serialized
+    assert redacted["_cohzen_truncated"] is True
+
+    limited = proc.process({"safe": "x" * 500})
+    assert limited["safe"].endswith("bytes]")

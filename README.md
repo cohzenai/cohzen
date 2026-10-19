@@ -1,6 +1,6 @@
 # `cz` (Cohzen CLI)
 
-**`cz`** statically reconstructs existing **LangGraph** applications' architecture and emits an immutable, machine-readable system manifest (**Cohzen Manifest v0.1**).
+**`cz`** statically reconstructs existing **LangGraph** applications' architecture and emits an immutable, machine-readable system manifest (**Cohzen Manifest v0.1**). Package v0.2.0 still emits the v0.1 manifest contract; Manifest v0.2 is planned as an additive runtime contract.
 
 > **Core Philosophy**: *"Cohzen reconstructs what can be determined statically from the codebase with zero runtime execution."*
 
@@ -63,7 +63,7 @@ cohzen/
 │   │
 │   ├── manifest/                  # Immutable Cohzen Manifest v0.1 Contract
 │   │   ├── schema.py              # CohzenManifest, GraphDef, NodeDef, ToolDef, ModelDef
-│   │   └── builder.py             # Deterministic Manifest compilation
+│   │   └── (built in scanner/models.py) # Deterministic Manifest compilation
 │   │
 │   ├── detectors/                 # Static AST pattern detectors
 │   │   ├── base.py                # BaseFrameworkScanner & BaseLLMDetector protocols
@@ -75,6 +75,12 @@ cohzen/
 │   │   ├── engine.py              # Audit orchestrator
 │   │   ├── registry.py            # Observability detector registry
 │   │   └── [providers]/           # LangSmith, Langfuse, Phoenix, Traceloop, AgentOps, etc.
+│   ├── execution/                 # Opt-in local runtime spans, SQLite storage, and redaction
+│   │   ├── callbacks.py            # LangChain/LangGraph callback recorder
+│   │   ├── context.py              # Execution and span context managers
+│   │   ├── instrumentation.py      # Legacy runtime patching hooks
+│   │   ├── processor.py            # Default redaction and payload limits
+│   │   └── sqlite.py               # Local run/span/event store and retention
 │   │
 │   └── formatters/                # Presentation & serialization
 │       ├── console.py             # Rich architecture & audit flow reports
@@ -98,6 +104,9 @@ cohzen/
 | **`cz scan [path]`** | **Architecture Discovery** | Reconstructs graphs, nodes, edges, models, tools, and checkpointer persistence. Emits terminal flow or **`CohzenManifest`** JSON. |
 | **`cz audit [path]`** | **Observability Audit** | Audits telemetry packages, `.env` configurations, and node-by-node / tool-by-tool instrumentation attribution. |
 | **`cz view [path]`** | **Visualization Shortcut** | Convenience alias for `cz scan --view` to launch the interactive browser visualizer. |
+| **`cz capture -- <command>`** | **Runtime Capture** | Explicitly runs the supplied command with Cohzen capture enabled only for that process. |
+| **`cz runs [path]` / `cz run <id>`** | **Runtime Records** | Lists local execution records or displays one record's spans. |
+| **`cz init [path]`** | **Legacy Setup** | Deprecated: creates a manifest, local database, and `.gitignore` entry; it no longer installs automatic startup hooks. |
 | **`cz version`** | **System Info** | Displays the installed `cz` release version. |
 
 ### 1. Architecture Discovery (`cz scan`)
@@ -130,6 +139,29 @@ cz audit . --json
 # CI / CD gate enforcement (fails with code 1 if under 80% coverage or unconfigured)
 cz audit . --min-coverage 80 --fail-on-missing
 ```
+
+### 3. Explicit Runtime Capture (`cz capture`)
+
+`cz capture` runs your application code. It creates a temporary Python startup bootstrap for that child process and removes it when the command exits; it does not write `sitecustomize.py` or a `.pth` file into your project or virtual environment.
+
+```bash
+cz init .                 # optional legacy setup for manifest/database creation
+cz capture -- python app.py
+cz capture -- python -m pytest
+cz runs .
+cz run <run-id>
+```
+
+Runtime records are stored locally in `.cohzen/executions.db`. Cohzen redacts inputs, outputs, metadata, events, reasons, and error text before persistence. Defaults retain 1,000 runs for 30 days and cap each persisted payload field at 64 KiB. Override defaults in code with `RetentionPolicy(...)`, or set `COHZEN_MAX_PAYLOAD_BYTES`, `COHZEN_MAX_RUNS`, and `COHZEN_MAX_AGE_DAYS`; use `none` to disable one limit.
+
+### Runtime Support Matrix
+
+| Dependency | Supported range | Verified in this repository | Notes |
+|---|---:|---:|---|
+| Python | `>=3.10` | 3.13.11 | Package classifiers currently list 3.10–3.12. |
+| LangGraph | `>=0.2,<1.3` | 1.2.12 | Runtime capture is opt-in; cross-version contract tests are Phase 1 work. |
+| LangChain Core | `>=0.2,<1.7` | 1.6.6 | Wrappers that replace callback configuration can prevent runtime capture. |
+| OpenTelemetry API | `>=1.20,<2` | 1.45.0 | Export requires Phase 4's SDK/exporter integration. |
 
 ---
 
@@ -271,12 +303,12 @@ The manifest is the **immutable, machine-readable contract** produced by `cz sca
 
 ## 🧪 Testing
 
-Run all 56 modular unit, integration, and real-world fixture tests:
+Run all 88 modular unit, integration, runtime, and real-world fixture tests:
 ```bash
 pytest tests/ -v
 ```
 
-Includes 10 real-world architectural fixture projects under `tests/real_world_fixtures/`:
+Includes 10 real-world architectural fixture projects under `tests/fixtures/real_world/`:
 - `01_single_file.py`: Monolithic graph definition
 - `02_graph_split_across_modules/`: Nodes and state split across files
 - `03_multiple_graphs/`: Separate supervisor and worker graphs
@@ -288,7 +320,7 @@ Includes 10 real-world architectural fixture projects under `tests/real_world_fi
 - `09_subgraphs/`: Parent graphs embedding child workflow nodes
 - `10_dynamic_or_partially_unresolvable/`: Dynamic lambdas and unresolvable imports with graceful degradation
 
-Run test coverage report (92%+ coverage):
+Run the measured test coverage report (last local measurement: 72% total coverage on Python 3.13.11):
 ```bash
 pytest --cov=cz --cov-report=term-missing tests/
 ```

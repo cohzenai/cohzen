@@ -1,6 +1,7 @@
 """Tests for CLI commands: cz init, cz runs, cz run (v0.2)."""
 
 import json
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -28,14 +29,14 @@ def test_cli_init_command(tmp_path: Path):
     assert "Cohzen initialized at" in result.stdout
     assert ".cohzen/manifest.json" in result.stdout
     assert ".cohzen/executions.db" in result.stdout
-    assert "sitecustomize.py" in result.stdout
+    assert "Deprecated" in result.stdout
 
     # Check artifacts created
     cohzen_dir = tmp_path / ".cohzen"
     assert cohzen_dir.is_dir()
     assert (cohzen_dir / "manifest.json").is_file()
     assert (cohzen_dir / "executions.db").is_file()
-    assert (tmp_path / "sitecustomize.py").is_file()
+    assert not (tmp_path / "sitecustomize.py").exists()
 
     # Check gitignore
     gitignore = tmp_path / ".gitignore"
@@ -51,6 +52,17 @@ def test_cli_init_command(tmp_path: Path):
     res_force = runner.invoke(app, ["init", str(tmp_path), "--force"])
     assert res_force.exit_code == 0
     assert "Cohzen initialized at" in res_force.stdout
+
+
+def test_cli_capture_runs_a_command_without_project_startup_edits(tmp_path: Path):
+    script = tmp_path / "app.py"
+    script.write_text("print('captured command ran')\n", encoding="utf-8")
+
+    result = runner.invoke(app, ["capture", "--", sys.executable, str(script)])
+
+    assert result.exit_code == 0
+    assert "runs the supplied command" in result.stdout
+    assert not (tmp_path / "sitecustomize.py").exists()
 
 
 def test_cli_runs_empty(tmp_path: Path):
