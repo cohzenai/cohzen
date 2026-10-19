@@ -6,10 +6,10 @@ This guide covers local environment setup, testing standards, and architecture g
 
 ## Local Setup
 
-1. **Prerequisites**: Python 3.10, 3.11, or 3.12.
+1. **Prerequisites**: Python 3.10, 3.11, 3.12, or 3.13.
 2. **Clone & Virtualenv**:
    ```bash
-   git clone https://github.com/cohzen-ai/cohzen.git
+   git clone https://github.com/cohzenai/cohzen.git
    cd cohzen
    python3 -m venv .venv
    source .venv/bin/activate
@@ -23,7 +23,7 @@ This guide covers local environment setup, testing standards, and architecture g
 
 ## Testing
 
-Cohzen currently has 88 tests covering static detectors, formatters, runtime storage/redaction, and real-world fixtures. The latest local full-suite coverage measurement is 72% on Python 3.13.11.
+Cohzen currently has 114 tests covering static detectors, formatters, runtime storage/redaction, and real-world fixtures. The latest local full-suite coverage measurement is 78% on Python 3.13.11.
 
 Run all tests:
 ```bash
@@ -64,3 +64,11 @@ cz audit examples/langgraph-tools
 - `src/cz/audit/`: Telemetry inspection, package manifest checks, and gap analysis.
 - `src/cz/execution/`: Opt-in capture, callback recording, local SQLite storage, default redaction, and retention.
 - `src/cz/formatters/`: Output generation (Rich console, Mermaid, HTML viewer, JSON).
+
+---
+
+## Release Process & Versioning
+
+- **Semantic Versioning & Deprecation Policy**: See [docs/versioning.md](versioning.md).
+- **Release Checklist**: Follow the step-by-step maintainer guide in [docs/release-checklist.md](release-checklist.md) when publishing new versions to PyPI.
+

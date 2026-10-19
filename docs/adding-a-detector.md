@@ -87,6 +87,7 @@ In `src/cz/detectors/llm/registry.py`:
    ```python
    from cz.detectors.llm.mistral import MistralDetector
 
+
    class LLMDetectorRegistry:
        def __init__(self) -> None:
            self._detectors: list[BaseLLMDetector] = [
@@ -101,12 +102,12 @@ In `src/cz/detectors/llm/registry.py`:
 In `tests/test_llm_providers.py`, add a test verifying detection of your provider's calls:
 ```python
 def test_mistral_detector(tmp_path: Path):
-    code = '''
+    code = """
 from mistralai import Mistral
 
 client = Mistral(api_key="secret")
 res = client.chat.complete(model="mistral-large-latest", messages=[{"role": "user", "content": "hello"}])
-'''
+"""
     f = tmp_path / "app.py"
     f.write_text(code, encoding="utf-8")
     result = scan_python_file(str(f))
@@ -180,6 +181,7 @@ In `src/cz/audit/registry.py`:
 2. Add an instance to `self._detectors`:
    ```python
    from cz.audit.datadog import DatadogDetector
+
 
    class ObservabilityRegistry:
        def __init__(self) -> None:

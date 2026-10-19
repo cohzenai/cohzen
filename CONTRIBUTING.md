@@ -48,6 +48,14 @@ All contributors and participants are expected to adhere to our [Code of Conduct
 
 ---
 
+## Finding Something to Work On
+
+- **Good First Issues**: Check out our pre-scoped [Good First Issues](docs/good-first-issues.md) for self-contained tasks like adding new LLM detectors, CLI flags, or runnable examples.
+- **Adding Detectors**: For adding support for new LLM clients or observability providers, see the step-by-step [Adding a Detector Guide](docs/adding-a-detector.md).
+- **Roadmap**: See [ROADMAP.md](ROADMAP.md) for current priorities and planned framework integrations.
+
+---
+
 ## Making a Change
 
 ### 1. Branch Naming
