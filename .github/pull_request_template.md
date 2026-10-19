@@ -15,7 +15,8 @@ Briefly describe the change, rationale, and problem it solves.
 - [ ] CLI smoke test verified (`cz scan ...`)
 
 ## Checklist
-- [ ] My code adheres to the project style guidelines
+- [ ] My code adheres to the project style guidelines (`ruff check .` and `ruff format .`)
+- [ ] All commits include DCO sign-off (`git commit -s` or `Signed-off-by:`)
 - [ ] I have updated documentation accordingly (`docs/` and `README.md`)
-- [ ] All new and existing tests passed with zero regressions
-- [ ] Analysis remains 100% static AST parsing with zero runtime code execution
+- [ ] All new and existing tests passed with zero regressions (`pytest`)
+- [ ] Architecture analysis remains static AST parsing with zero runtime side-effects
