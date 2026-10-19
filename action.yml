@@ -63,7 +63,7 @@ runs:
   using: "composite"
   steps:
     - name: Ensure Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ inputs.python-version }}
         check-latest: false
