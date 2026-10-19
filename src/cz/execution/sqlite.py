@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sqlite3
 import threading
 from datetime import datetime, timezone
@@ -10,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from cz.execution.models import Event, Execution, Span
-from cz.execution.processor import DataProcessor, NoopProcessor
+from cz.execution.processor import DataProcessor, RedactionProcessor
 from cz.execution.store import ExecutionStore
 
 
@@ -26,6 +27,45 @@ def _parse_iso(val: str | None) -> datetime | None:
         return datetime.fromisoformat(val)
     except ValueError:
         return None
+
+
+class RetentionPolicy:
+    """Limits for locally persisted executions. ``None`` disables one limit."""
+
+    def __init__(
+        self,
+        max_payload_bytes: int | None = 65_536,
+        max_runs: int | None = 1_000,
+        max_age_days: int | None = 30,
+    ) -> None:
+        for name, value in {
+            "max_payload_bytes": max_payload_bytes,
+            "max_runs": max_runs,
+            "max_age_days": max_age_days,
+        }.items():
+            if value is not None and value < 1:
+                raise ValueError(f"{name} must be positive or None")
+        self.max_payload_bytes = max_payload_bytes
+        self.max_runs = max_runs
+        self.max_age_days = max_age_days
+
+    @classmethod
+    def from_environment(cls) -> "RetentionPolicy":
+        """Read optional ``COHZEN_MAX_*`` overrides for the default store."""
+
+        def read(name: str, default: int) -> int | None:
+            raw = os.environ.get(name)
+            if raw is None:
+                return default
+            if raw.lower() in {"none", "off", "disabled"}:
+                return None
+            return int(raw)
+
+        return cls(
+            max_payload_bytes=read("COHZEN_MAX_PAYLOAD_BYTES", 65_536),
+            max_runs=read("COHZEN_MAX_RUNS", 1_000),
+            max_age_days=read("COHZEN_MAX_AGE_DAYS", 30),
+        )
 
 
 class SQLiteExecutionStore(ExecutionStore):
@@ -85,17 +125,25 @@ class SQLiteExecutionStore(ExecutionStore):
         self,
         db_path: Path | str = ".cohzen/executions.db",
         processor: DataProcessor | None = None,
+        retention: RetentionPolicy | None = None,
     ):
         self.db_path = Path(db_path)
-        self.processor: DataProcessor = processor or NoopProcessor()
+        self.retention = retention or RetentionPolicy.from_environment()
+        self.processor: DataProcessor = processor or RedactionProcessor(
+            max_payload_bytes=self.retention.max_payload_bytes
+        )
         self._lock = threading.RLock()
         self._ensure_db()
 
     def _ensure_db(self) -> None:
         """Create parent directory and initialize tables and pragmas."""
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
-        with self._connect() as conn:
-            conn.execute("PRAGMA journal_mode = WAL;")
+        conn = self._connect()
+        try:
+            try:
+                conn.execute("PRAGMA journal_mode = WAL;")
+            except sqlite3.OperationalError:
+                pass
             conn.execute("PRAGMA synchronous = NORMAL;")
             conn.execute("PRAGMA foreign_keys = ON;")
             conn.executescript(self.SCHEMA_SQL)
@@ -108,10 +156,15 @@ class SQLiteExecutionStore(ExecutionStore):
                 conn.execute("ALTER TABLE spans ADD COLUMN reason TEXT;")
             except sqlite3.OperationalError:
                 pass
+            conn.commit()
+        finally:
+            conn.close()
 
     def _connect(self) -> sqlite3.Connection:
-        conn = sqlite3.connect(str(self.db_path), check_same_thread=False)
+        conn = sqlite3.connect(str(self.db_path), timeout=30.0, check_same_thread=False)
         conn.row_factory = sqlite3.Row
+        conn.execute("PRAGMA busy_timeout = 30000;")
+        conn.execute("PRAGMA foreign_keys = ON;")
         return conn
 
     def create_execution(self, execution: Execution) -> None:
@@ -133,10 +186,28 @@ class SQLiteExecutionStore(ExecutionStore):
                     execution.started_at.isoformat(),
                     execution.ended_at.isoformat() if execution.ended_at else None,
                     execution.duration_ms,
-                    execution.reason,
-                    execution.error,
+                    self.processor.process(execution.reason),
+                    self.processor.process(execution.error),
                     _json_dumps(metadata),
                 ),
+            )
+            self._apply_retention(conn)
+
+    def _apply_retention(self, conn: sqlite3.Connection) -> None:
+        """Remove expired executions and their dependent spans/events."""
+        if self.retention.max_age_days is not None:
+            cutoff = datetime.now(timezone.utc).timestamp() - self.retention.max_age_days * 86_400
+            cutoff_iso = datetime.fromtimestamp(cutoff, tz=timezone.utc).isoformat()
+            conn.execute("DELETE FROM executions WHERE started_at < ?", (cutoff_iso,))
+        if self.retention.max_runs is not None:
+            conn.execute(
+                """
+                DELETE FROM executions WHERE id IN (
+                    SELECT id FROM executions ORDER BY started_at DESC, id DESC
+                    LIMIT -1 OFFSET ?
+                )
+                """,
+                (self.retention.max_runs,),
             )
 
     def finish_execution(
@@ -162,9 +233,9 @@ class SQLiteExecutionStore(ExecutionStore):
                         status,
                         ended_at.isoformat(),
                         duration_ms,
-                        error,
+                        self.processor.process(error),
                         _json_dumps(processed_meta),
-                        reason,
+                        self.processor.process(reason),
                         execution_id,
                     ),
                 )
@@ -180,7 +251,7 @@ class SQLiteExecutionStore(ExecutionStore):
                         status,
                         ended_at.isoformat(),
                         duration_ms,
-                        error,
+                        self.processor.process(error),
                         _json_dumps(processed_meta),
                         execution_id,
                     ),
@@ -196,8 +267,8 @@ class SQLiteExecutionStore(ExecutionStore):
                         status,
                         ended_at.isoformat(),
                         duration_ms,
-                        error,
-                        reason,
+                        self.processor.process(error),
+                        self.processor.process(reason),
                         execution_id,
                     ),
                 )
@@ -208,7 +279,7 @@ class SQLiteExecutionStore(ExecutionStore):
                     SET status = ?, ended_at = ?, duration_ms = ?, error = ?
                     WHERE id = ?
                     """,
-                    (status, ended_at.isoformat(), duration_ms, error, execution_id),
+                    (status, ended_at.isoformat(), duration_ms, self.processor.process(error), execution_id),
                 )
 
     def create_span(self, span: Span) -> None:
@@ -233,10 +304,10 @@ class SQLiteExecutionStore(ExecutionStore):
                     span.started_at.isoformat(),
                     span.ended_at.isoformat() if span.ended_at else None,
                     span.duration_ms,
-                    span.reason,
+                    self.processor.process(span.reason),
                     _json_dumps(processed_input) if processed_input is not None else None,
                     None,
-                    span.error,
+                    self.processor.process(span.error),
                     _json_dumps(processed_metadata),
                 ),
             )
@@ -267,9 +338,9 @@ class SQLiteExecutionStore(ExecutionStore):
                         ended_at.isoformat(),
                         duration_ms,
                         _json_dumps(processed_output) if processed_output is not None else None,
-                        error,
+                        self.processor.process(error),
                         _json_dumps(processed_meta),
-                        reason,
+                        self.processor.process(reason),
                         span_id,
                     ),
                 )
@@ -286,7 +357,7 @@ class SQLiteExecutionStore(ExecutionStore):
                         ended_at.isoformat(),
                         duration_ms,
                         _json_dumps(processed_output) if processed_output is not None else None,
-                        error,
+                        self.processor.process(error),
                         _json_dumps(processed_meta),
                         span_id,
                     ),
@@ -303,8 +374,8 @@ class SQLiteExecutionStore(ExecutionStore):
                         ended_at.isoformat(),
                         duration_ms,
                         _json_dumps(processed_output) if processed_output is not None else None,
-                        error,
-                        reason,
+                        self.processor.process(error),
+                        self.processor.process(reason),
                         span_id,
                     ),
                 )
@@ -320,7 +391,7 @@ class SQLiteExecutionStore(ExecutionStore):
                         ended_at.isoformat(),
                         duration_ms,
                         _json_dumps(processed_output) if processed_output is not None else None,
-                        error,
+                        self.processor.process(error),
                         span_id,
                     ),
                 )

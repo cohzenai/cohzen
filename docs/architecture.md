@@ -1,6 +1,6 @@
 # Cohzen Architecture
 
-Cohzen is a **100% static architecture scanner and observability auditor** for agentic workflows, focused on LangGraph in v0.1.
+Cohzen's default mode is a **100% static architecture scanner and observability auditor** for agentic workflows, focused on LangGraph in Manifest v0.1. Package v0.2.0 also has an opt-in local runtime recorder; it is separate from static scanning and explicitly runs the supplied command through `cz capture -- <command>`.
 
 ---
 
@@ -61,3 +61,4 @@ Real-world code contains dynamic constructs and third-party library dependencies
 | `cz.manifest` | Authoritative schema definition (`v0.1.0`), deterministic sorting, serialization. |
 | `cz.audit` | Observability package discovery, environment tracing checks, and telemetry coverage. |
 | `cz.formatters` | Console Rich dashboards, Mermaid flowcharts, and standalone HTML visualizers. |
+| `cz.execution` | Explicit runtime capture, callback spans, redaction-before-persistence, and bounded local SQLite retention. |

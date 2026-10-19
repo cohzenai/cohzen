@@ -1,0 +1,36 @@
+name: DCO Check
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  dco-check:
+    name: Developer Certificate of Origin (DCO)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify Signed-off-by line on all PR commits
+        run: |
+          COMMITS=$(git log --no-merges --format='%H' ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }})
+          FAILED=0
+          for commit in $COMMITS; do
+            if ! git log -1 --format='%B' "$commit" | grep -q "^Signed-off-by:"; then
+              echo "::error::Commit $commit is missing DCO sign-off. Please run 'git commit --amend -s' or rebase with '--signoff'."
+              FAILED=1
+            fi
+          done
+          if [ $FAILED -ne 0 ]; then
+            echo ""
+            echo "DCO verification failed: one or more commits are missing a 'Signed-off-by:' trailer."
+            echo "Please see CONTRIBUTING.md for instructions on signing off commits."
+            exit 1
+          fi
+          echo "All commits have valid DCO sign-offs."

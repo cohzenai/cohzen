@@ -1,13 +1,13 @@
 """Tests for SQLiteExecutionStore persistence, queries, and constraints."""
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
 
-from cz.execution.models import Execution, Span
+from cz.execution.models import Event, Execution, Span
 from cz.execution.processor import RedactionProcessor
-from cz.execution.sqlite import SQLiteExecutionStore
+from cz.execution.sqlite import RetentionPolicy, SQLiteExecutionStore
 
 
 @pytest.fixture
@@ -155,3 +155,63 @@ def test_sqlite_redaction_integration(tmp_path: Path):
     fetched_spans = store.get_spans("ex_secret")
     assert fetched_spans[0].input["token"] == "[REDACTED]"
     assert fetched_spans[0].input["prompt"] == "Hi"
+
+
+def test_sqlite_default_redacts_every_persisted_payload_path(tmp_path: Path):
+    store = SQLiteExecutionStore(db_path=tmp_path / "default_redaction.db")
+    secret = "person@example.com Bearer abcdefghijklmnopqrstuvwxyz123456"
+    execution = Execution(id="ex_paths", graph_id="flow", metadata={"secret": secret})
+    store.create_execution(execution)
+    store.finish_execution(
+        "ex_paths",
+        "failed",
+        datetime.now(timezone.utc),
+        1,
+        error=secret,
+        reason=secret,
+        metadata={"email": "person@example.com"},
+    )
+    span = Span(
+        id="sp_paths",
+        execution_id="ex_paths",
+        kind="node",
+        name="node",
+        input={"token": secret},
+        metadata={"note": secret},
+        reason=secret,
+    )
+    store.create_span(span)
+    store.finish_span(
+        "sp_paths",
+        "failed",
+        datetime.now(timezone.utc),
+        1,
+        output={"password": secret},
+        error=secret,
+        reason=secret,
+        metadata={"phone": "+1 415-555-0123"},
+    )
+    store.add_event(Event(execution_id="ex_paths", span_id="sp_paths", kind="error", data={"message": secret}))
+
+    with store._connect() as conn:
+        dump = " ".join(str(value) for row in conn.execute("SELECT * FROM executions").fetchall() for value in row)
+        dump += " " + " ".join(str(value) for row in conn.execute("SELECT * FROM spans").fetchall() for value in row)
+        dump += " " + " ".join(str(value) for row in conn.execute("SELECT * FROM events").fetchall() for value in row)
+    assert "person@example.com" not in dump
+    assert "abcdefghijklmnopqrstuvwxyz123456" not in dump
+    assert "415-555-0123" not in dump
+    assert "[REDACTED]" in dump
+
+
+def test_sqlite_retention_removes_old_and_excess_runs(tmp_path: Path):
+    now = datetime.now(timezone.utc)
+    store = SQLiteExecutionStore(
+        db_path=tmp_path / "retention.db",
+        retention=RetentionPolicy(max_runs=2, max_age_days=7, max_payload_bytes=1024),
+    )
+    store.create_execution(Execution(id="old", graph_id="flow", started_at=now - timedelta(days=8)))
+    store.create_execution(Execution(id="one", graph_id="flow", started_at=now - timedelta(days=2)))
+    store.create_execution(Execution(id="two", graph_id="flow", started_at=now - timedelta(days=1)))
+    store.create_execution(Execution(id="three", graph_id="flow", started_at=now))
+
+    assert [run.id for run in store.list_executions()] == ["three", "two"]

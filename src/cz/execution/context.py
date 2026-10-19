@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import functools
 import inspect
 import time
@@ -98,7 +99,15 @@ def execution_scope(
 
     try:
         yield execution
+    except (GeneratorExit, asyncio.CancelledError):
+        status = "cancelled"
+        error_msg = "Stream cancelled by caller"
+        raise
     except Exception as exc:
+        status = "failed"
+        error_msg = f"{type(exc).__name__}: {exc!s}"
+        raise
+    except BaseException as exc:
         status = "failed"
         error_msg = f"{type(exc).__name__}: {exc!s}"
         raise
@@ -117,8 +126,14 @@ def execution_scope(
             error=error_msg,
             reason=execution.reason,
         )
-        _current_execution.reset(exec_token)
-        _current_store.reset(store_token)
+        try:
+            _current_execution.reset(exec_token)
+        except ValueError:
+            _current_execution.set(None)
+        try:
+            _current_store.reset(store_token)
+        except ValueError:
+            _current_store.set(None)
 
 
 @contextmanager
@@ -167,7 +182,17 @@ def span_scope(
 
     try:
         yield span
+    except (GeneratorExit, asyncio.CancelledError):
+        status = "cancelled"
+        error_msg = "Stream cancelled by caller"
+        span.error = error_msg
+        raise
     except Exception as exc:
+        status = "failed"
+        error_msg = f"{type(exc).__name__}: {exc!s}"
+        span.error = error_msg
+        raise
+    except BaseException as exc:
         status = "failed"
         error_msg = f"{type(exc).__name__}: {exc!s}"
         span.error = error_msg
@@ -188,7 +213,10 @@ def span_scope(
             metadata=span.metadata,
             reason=span.reason,
         )
-        _current_span.reset(span_token)
+        try:
+            _current_span.reset(span_token)
+        except ValueError:
+            _current_span.set(None)
         if auto_exec_scope:
             auto_exec_scope.__exit__(None, None, None)
 

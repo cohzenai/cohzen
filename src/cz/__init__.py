@@ -1,17 +1,22 @@
 """cz - Cohzen CLI & Runtime Observability Engine."""
 
-from cz.execution import execution_scope, observe, record_reason, span_scope, track
+from typing import Any
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
-# Auto-activate tracking when cz is imported
-try:
-    track()
-except Exception:
-    pass
 
-# Aliases
-reason = record_reason
+def __getattr__(name: str) -> Any:
+    """Keep package import cheap for the always-on ``.pth`` startup hook."""
+    if name in {"execution_scope", "observe", "record_reason", "span_scope", "track"}:
+        from cz import execution
+
+        return getattr(execution, name)
+    if name == "reason":
+        from cz.execution import record_reason
+
+        return record_reason
+    raise AttributeError(name)
+
 
 __all__ = [
     "__version__",

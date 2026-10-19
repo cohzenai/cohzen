@@ -4,24 +4,25 @@ build-backend = "hatchling.build"
 
 [project]
 name = "cohzen"
-version = "0.2.0"
+version = "0.3.0"
 description = "Fast, static scanner for LangGraph architectures: detecting compiled graphs, agents, and routing edges."
 readme = "README.md"
 requires-python = ">=3.10"
-license = "MIT"
+license = "Apache-2.0"
 authors = [
-    { name = "Cohzen", email = "dev@cohzen.ai" },
+    { name = "Cohzen contributors", email = "dev@cohzen.ai" },
 ]
 keywords = ["langgraph", "langchain", "agents", "cli", "ast-scanner", "static-analysis"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Environment :: Console",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Software Development :: Code Generators",
     "Topic :: Software Development :: Quality Assurance",
 ]
@@ -32,6 +33,12 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+runtime = [
+    # Optional: static scanning intentionally has no framework runtime dependency.
+    "langgraph>=0.2,<1.3",
+    "langchain-core>=0.2,<1.7",
+    "opentelemetry-api>=1.20,<2",
+]
 dev = [
     "pytest>=8.0.0",
     "pytest-cov>=4.1.0",

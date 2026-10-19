@@ -2,6 +2,10 @@
 
 Cohzen v0.1 focuses authoritatively on **LangGraph**.
 
+## Runtime Compatibility
+
+The optional `runtime` dependency extra declares `langgraph>=0.2,<1.3`, `langchain-core>=0.2,<1.7`, and `opentelemetry-api>=1.20,<2`. The repository currently verifies LangGraph 1.2.12, LangChain Core 1.6.6, and OpenTelemetry API 1.45.0 locally. A multi-version contract matrix is Phase 1 work; custom wrappers that replace callbacks can prevent runtime capture.
+
 ---
 
 ## 1. LangGraph Support (v0.1)
@@ -45,9 +49,6 @@ Cohzen detects model declarations, tool bindings (`bind_tools`), and call sites 
 
 ---
 
-## Roadmap
+## Future Frameworks & Roadmap
 
-Future releases of Cohzen will extend static architecture reconstruction to:
-- LlamaIndex Workflows
-- CrewAI
-- AutoGen
+Static support for additional agent frameworks (such as LlamaIndex Workflows, CrewAI, and AutoGen) is tracked on our [Project Roadmap](../ROADMAP.md).
