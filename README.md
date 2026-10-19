@@ -31,9 +31,9 @@ uv add cohzen
 
 ---
 
-## 🏗️ Production-Grade Modular Architecture
+## 🏗️ Repository Architecture
 
-The repository is organized into distinct, enterprise-grade domain packages:
+The repository is organized into distinct domain packages:
 
 ```
 cohzen/
@@ -47,7 +47,6 @@ cohzen/
 │   ├── manifest.md                # CohzenManifest v0.1 JSON specification
 │   ├── supported-frameworks.md    # Framework & LLM detector matrix
 │   ├── ci-cd.md                   # CI/CD integration and GitHub Action guide
-│   ├── gtm.md                     # Go-To-Market strategy and commercial roadmap
 │   └── development.md             # Contributor quickstart & testing guidelines
 │
 ├── examples/                      # Runnable standalone LangGraph examples

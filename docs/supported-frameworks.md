@@ -49,9 +49,6 @@ Cohzen detects model declarations, tool bindings (`bind_tools`), and call sites 
 
 ---
 
-## Roadmap
+## Future Frameworks & Roadmap
 
-Future releases of Cohzen will extend static architecture reconstruction to:
-- LlamaIndex Workflows
-- CrewAI
-- AutoGen
+Static support for additional agent frameworks (such as LlamaIndex Workflows, CrewAI, and AutoGen) is tracked on our [Project Roadmap](../ROADMAP.md).
