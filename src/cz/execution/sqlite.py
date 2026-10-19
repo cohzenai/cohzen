@@ -66,6 +66,8 @@ class RetentionPolicy:
             max_runs=read("COHZEN_MAX_RUNS", 1_000),
             max_age_days=read("COHZEN_MAX_AGE_DAYS", 30),
         )
+
+
 class SQLiteExecutionStore(ExecutionStore):
     """Local SQLite-backed persistent execution and span store."""
 
@@ -136,8 +138,12 @@ class SQLiteExecutionStore(ExecutionStore):
     def _ensure_db(self) -> None:
         """Create parent directory and initialize tables and pragmas."""
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
-        with self._connect() as conn:
-            conn.execute("PRAGMA journal_mode = WAL;")
+        conn = self._connect()
+        try:
+            try:
+                conn.execute("PRAGMA journal_mode = WAL;")
+            except sqlite3.OperationalError:
+                pass
             conn.execute("PRAGMA synchronous = NORMAL;")
             conn.execute("PRAGMA foreign_keys = ON;")
             conn.executescript(self.SCHEMA_SQL)
@@ -150,10 +156,14 @@ class SQLiteExecutionStore(ExecutionStore):
                 conn.execute("ALTER TABLE spans ADD COLUMN reason TEXT;")
             except sqlite3.OperationalError:
                 pass
+            conn.commit()
+        finally:
+            conn.close()
 
     def _connect(self) -> sqlite3.Connection:
-        conn = sqlite3.connect(str(self.db_path), check_same_thread=False)
+        conn = sqlite3.connect(str(self.db_path), timeout=30.0, check_same_thread=False)
         conn.row_factory = sqlite3.Row
+        conn.execute("PRAGMA busy_timeout = 30000;")
         conn.execute("PRAGMA foreign_keys = ON;")
         return conn
 

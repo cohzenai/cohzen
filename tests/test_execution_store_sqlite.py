@@ -163,17 +163,33 @@ def test_sqlite_default_redacts_every_persisted_payload_path(tmp_path: Path):
     execution = Execution(id="ex_paths", graph_id="flow", metadata={"secret": secret})
     store.create_execution(execution)
     store.finish_execution(
-        "ex_paths", "failed", datetime.now(timezone.utc), 1, error=secret, reason=secret,
+        "ex_paths",
+        "failed",
+        datetime.now(timezone.utc),
+        1,
+        error=secret,
+        reason=secret,
         metadata={"email": "person@example.com"},
     )
     span = Span(
-        id="sp_paths", execution_id="ex_paths", kind="node", name="node",
-        input={"token": secret}, metadata={"note": secret}, reason=secret,
+        id="sp_paths",
+        execution_id="ex_paths",
+        kind="node",
+        name="node",
+        input={"token": secret},
+        metadata={"note": secret},
+        reason=secret,
     )
     store.create_span(span)
     store.finish_span(
-        "sp_paths", "failed", datetime.now(timezone.utc), 1, output={"password": secret},
-        error=secret, reason=secret, metadata={"phone": "+1 415-555-0123"},
+        "sp_paths",
+        "failed",
+        datetime.now(timezone.utc),
+        1,
+        output={"password": secret},
+        error=secret,
+        reason=secret,
+        metadata={"phone": "+1 415-555-0123"},
     )
     store.add_event(Event(execution_id="ex_paths", span_id="sp_paths", kind="error", data={"message": secret}))
 

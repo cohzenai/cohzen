@@ -22,6 +22,24 @@ class NoopProcessor:
         return value
 
 
+class PayloadLimiter:
+    """Snapshot and bound payloads before they enter an asynchronous writer queue."""
+
+    def __init__(self, max_payload_bytes: int | None = 65_536):
+        self.max_payload_bytes = max_payload_bytes
+
+    def process(self, value: Any) -> Any:
+        if self.max_payload_bytes is None:
+            return value
+        encoded = json.dumps(value, default=str, ensure_ascii=False).encode("utf-8")
+        if len(encoded) <= self.max_payload_bytes:
+            return value
+        if isinstance(value, str):
+            preview = value.encode("utf-8")[: max(0, self.max_payload_bytes - 48)].decode("utf-8", "ignore")
+            return f"{preview}[TRUNCATED: {len(encoded)} bytes]"
+        return {"_cohzen_truncated": True, "original_bytes": len(encoded), "max_payload_bytes": self.max_payload_bytes}
+
+
 class RedactionProcessor:
     """Redact sensitive values and bound a persisted payload's size.
 

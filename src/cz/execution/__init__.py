@@ -18,9 +18,11 @@ from cz.execution.models import Event, Execution, Span
 from cz.execution.processor import DataProcessor, NoopProcessor, RedactionProcessor
 from cz.execution.sqlite import RetentionPolicy, SQLiteExecutionStore
 from cz.execution.store import ExecutionStore
+from cz.execution.writer import AsyncExecutionStore
 
 __all__ = [
     "CohzenCallbackHandler",
+    "AsyncExecutionStore",
     "DataProcessor",
     "Event",
     "Execution",
