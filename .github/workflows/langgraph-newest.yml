@@ -1,0 +1,37 @@
+name: Scheduled LangGraph Compatibility
+
+on:
+  schedule:
+    # Run daily at 03:00 UTC
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-newest-langgraph:
+    name: Test Against Newest LangGraph
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies with latest unpinned LangGraph
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+          pip install --upgrade langgraph langchain-core
+
+      - name: Log installed LangGraph version
+        run: |
+          python -c "import importlib.metadata; print('LangGraph version:', importlib.metadata.version('langgraph'))"
+
+      - name: Run contract and always-on capture test suites
+        run: |
+          pytest -v tests/test_runtime_contracts.py tests/test_always_on_capture.py
