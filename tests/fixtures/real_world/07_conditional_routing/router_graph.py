@@ -1,4 +1,5 @@
-from langgraph.graph import StateGraph, START, END
+from langgraph.graph import END, START, StateGraph
+
 
 def router_fn(state: dict) -> str:
     val = state.get("priority", "medium")
@@ -8,14 +9,18 @@ def router_fn(state: dict) -> str:
         return "archive"
     return "standard"
 
+
 def standard_handler(state):
     return {"status": "normal"}
+
 
 def escalate_handler(state):
     return {"status": "escalated"}
 
+
 def archive_handler(state):
     return {"status": "archived"}
+
 
 wf = StateGraph(dict)
 wf.add_node("standard", standard_handler)
@@ -29,7 +34,7 @@ wf.add_conditional_edges(
         "standard": "standard",
         "escalate": "escalate",
         "archive": "archive",
-    }
+    },
 )
 
 wf.add_edge("standard", END)

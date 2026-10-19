@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from typing import List, Optional
+
 from cz.scanner.models import ObservabilityPackage
 
 
@@ -13,7 +13,7 @@ class LangfuseDetector:
         self.display_name = "Langfuse"
         self.category = "LLM Observability & Analytics"
 
-    def check_manifest(self, manifest_content: str, filename: str) -> Optional[ObservabilityPackage]:
+    def check_manifest(self, manifest_content: str, filename: str) -> ObservabilityPackage | None:
         pattern = r"(?i)(?:^|[\"'\s,])(langfuse)(?:\[[^\]]*\])?([><=~!].*)?(?:$|[\"'\s,\n])"
         match = re.search(pattern, manifest_content, re.MULTILINE)
         if match:
@@ -27,8 +27,8 @@ class LangfuseDetector:
             )
         return None
 
-    def get_known_env_vars(self) -> List[str]:
+    def get_known_env_vars(self) -> list[str]:
         return ["LANGFUSE_PUBLIC_KEY", "LANGFUSE_SECRET_KEY", "LANGFUSE_HOST"]
 
-    def get_known_decorators(self) -> List[str]:
+    def get_known_decorators(self) -> list[str]:
         return ["observe"]

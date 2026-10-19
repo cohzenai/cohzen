@@ -1,15 +1,16 @@
 """Sample LangGraph: Agent with tool binding, ToolNode, prompt, and LangSmith tracing."""
 
-from typing import TypedDict, List
-from langchain_core.tools import tool
+from typing import TypedDict
+
 from langchain_core.prompts import ChatPromptTemplate
-from langgraph.graph import StateGraph, START, END
+from langchain_core.tools import tool
+from langgraph.graph import END, START, StateGraph
 from langgraph.prebuilt import ToolNode
 from langsmith import traceable
 
 
 class MessagesState(TypedDict):
-    messages: List[str]
+    messages: list[str]
 
 
 @tool
@@ -29,10 +30,12 @@ def calculate_math(expression: str) -> str:
 tools = [search_web, calculate_math]
 
 # Prompts
-system_prompt = ChatPromptTemplate.from_messages([
-    ("system", "You are a research assistant with access to tools."),
-    ("placeholder", "{messages}"),
-])
+system_prompt = ChatPromptTemplate.from_messages(
+    [
+        ("system", "You are a research assistant with access to tools."),
+        ("placeholder", "{messages}"),
+    ]
+)
 
 
 @traceable(name="research_agent")

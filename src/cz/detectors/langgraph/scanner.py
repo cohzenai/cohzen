@@ -3,14 +3,13 @@
 from __future__ import annotations
 
 import ast
-from typing import Dict, List, Optional, Tuple
 
+from cz.scanner.models import CompileInfo, EdgeInfo, GraphInfo, NodeInfo, ToolNodeDef
 from cz.scanner.utils import (
     ast_to_str,
     extract_dict_mapping,
     extract_list_of_strings,
 )
-from cz.scanner.models import CompileInfo, EdgeInfo, GraphInfo, NodeInfo, ToolNodeDef
 
 KNOWN_GRAPH_CLASSES = {"StateGraph", "Graph", "MessageGraph"}
 
@@ -21,9 +20,9 @@ class LangGraphScanner:
     def __init__(self, file_path: str = "") -> None:
         self.framework_name = "langgraph"
         self.file_path = file_path
-        self.graphs: Dict[str, GraphInfo] = {}
-        self.tool_nodes: Dict[str, ToolNodeDef] = {}
-        self.var_lists: Dict[str, List[str]] = {}
+        self.graphs: dict[str, GraphInfo] = {}
+        self.tool_nodes: dict[str, ToolNodeDef] = {}
+        self.var_lists: dict[str, list[str]] = {}
 
     def reset(self, file_path: str) -> None:
         self.file_path = file_path
@@ -31,8 +30,8 @@ class LangGraphScanner:
         self.tool_nodes.clear()
         self.var_lists.clear()
 
-    def _resolve_tools_list(self, raw_list: List[str]) -> List[str]:
-        resolved: List[str] = []
+    def _resolve_tools_list(self, raw_list: list[str]) -> list[str]:
+        resolved: list[str] = []
         for item in raw_list:
             if item in self.var_lists:
                 resolved.extend(self.var_lists[item])
@@ -51,7 +50,7 @@ class LangGraphScanner:
             )
         return self.graphs[var_name]
 
-    def visit_assign(self, targets: List[ast.AST], value: ast.AST, lineno: int) -> None:
+    def visit_assign(self, targets: list[ast.AST], value: ast.AST, lineno: int) -> None:
         # Track list assignments for tool alias resolution (e.g. tools = [tool_a, tool_b])
         if isinstance(value, (ast.List, ast.Tuple)):
             for target in targets:
@@ -88,7 +87,7 @@ class LangGraphScanner:
 
         # 2. Standalone ToolNode instantiation
         if func_name == "ToolNode" or func_name.endswith(".ToolNode"):
-            raw_tools: List[str] = []
+            raw_tools: list[str] = []
             if value.args:
                 raw_tools = extract_list_of_strings(value.args[0])
             for kw in value.keywords:
@@ -120,7 +119,7 @@ class LangGraphScanner:
     def visit_call(self, call: ast.Call, lineno: int) -> None:
         # Unwrap chained calls like builder.add_node(...).add_edge(...)
         current = call
-        chain: List[Tuple[str, ast.Call]] = []
+        chain: list[tuple[str, ast.Call]] = []
         while isinstance(current, ast.Call) and isinstance(current.func, ast.Attribute):
             method_name = current.func.attr
             chain.append((method_name, current))
@@ -165,7 +164,7 @@ class LangGraphScanner:
         graph = self._get_or_create_graph(graph_var, line_number)
         node_name = ""
         handler_name = ""
-        inline_tool_node: Optional[ToolNodeDef] = None
+        inline_tool_node: ToolNodeDef | None = None
 
         if len(call.args) >= 2:
             node_name = ast_to_str(call.args[0]).strip("'\"")
@@ -238,7 +237,7 @@ class LangGraphScanner:
         graph = self._get_or_create_graph(graph_var, line_number)
         source = ""
         condition_fn = ""
-        mapping: Dict[str, str] = {}
+        mapping: dict[str, str] = {}
 
         if len(call.args) >= 1:
             source = ast_to_str(call.args[0]).strip("'\"")
@@ -314,8 +313,8 @@ class LangGraphScanner:
         graph.is_compiled = True
 
         checkpointer = None
-        interrupt_before: List[str] = []
-        interrupt_after: List[str] = []
+        interrupt_before: list[str] = []
+        interrupt_after: list[str] = []
         store = None
 
         for kw in call_node.keywords:
@@ -338,8 +337,9 @@ class LangGraphScanner:
             store=store,
         )
 
-    def get_graphs(self) -> List[GraphInfo]:
+    def get_graphs(self) -> list[GraphInfo]:
         return [
-            g for g in self.graphs.values()
+            g
+            for g in self.graphs.values()
             if g.nodes or g.edges or g.is_compiled or g.state_schema or g.graph_class in KNOWN_GRAPH_CLASSES
         ]

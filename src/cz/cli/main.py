@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from enum import Enum
 import json
-from pathlib import Path
 import re
 import shutil
-from typing import Optional
+from enum import Enum
+from pathlib import Path
 
 import typer
 from rich.console import Console
@@ -348,7 +347,7 @@ def scan(
         "--json",
         help="Shortcut to output Cohzen Manifest JSON (equivalent to -f json)",
     ),
-    output: Optional[Path] = typer.Option(
+    output: Path | None = typer.Option(
         None,
         "--output",
         "-o",
@@ -380,8 +379,11 @@ def scan(
 
     if view:
         from cz.formatters.viewer import open_in_browser
+
         viewer_path = open_in_browser(result)
-        console.print(f"[bold green]✔ Opened interactive architecture visualizer in browser ({viewer_path})[/bold green]")
+        console.print(
+            f"[bold green]✔ Opened interactive architecture visualizer in browser ({viewer_path})[/bold green]"
+        )
         return
 
     # Format the result
@@ -422,11 +424,21 @@ def audit(
         "--json",
         help="Output audit findings and coverage as JSON",
     ),
-    output: Optional[Path] = typer.Option(
+    output: Path | None = typer.Option(
         None,
         "--output",
         "-o",
         help="Write output to a specified file instead of stdout",
+    ),
+    min_coverage: float | None = typer.Option(
+        None,
+        "--min-coverage",
+        help="Minimum required agent/node instrumentation percentage (0-100). Exits with code 1 if not met.",
+    ),
+    fail_on_missing: bool = typer.Option(
+        False,
+        "--fail-on-missing",
+        help="Exit with code 1 if no telemetry packages or environment configurations are detected.",
     ),
     verbose: bool = typer.Option(
         False,
@@ -458,6 +470,25 @@ def audit(
         else:
             print_audit_report(result, console=console)
 
+    # CI / CD Gate Enforcement
+    failed_reasons: list[str] = []
+    obs = result.observability
+    if fail_on_missing:
+        if not obs or not obs.is_observability_configured:
+            failed_reasons.append("No LLM observability package or environment config was detected.")
+
+    if min_coverage is not None:
+        pct = obs.agent_instrumentation_pct if obs else 0.0
+        if pct < min_coverage:
+            failed_reasons.append(
+                f"Agent instrumentation coverage is {pct}%, below the required threshold of {min_coverage}%."
+            )
+
+    if failed_reasons:
+        for r in failed_reasons:
+            console.print(f"[bold red]CI Gate Failure:[/bold red] {r}")
+        raise typer.Exit(code=1)
+
 
 @app.command(name="view")
 def view_graph(
@@ -465,6 +496,7 @@ def view_graph(
 ) -> None:
     """Scan and open an interactive graphical visualizer in your browser."""
     from cz.formatters.viewer import open_in_browser
+
     result = scan_repository(path)
     viewer_path = open_in_browser(result)
     console.print(f"[bold green]✔ Opened interactive architecture visualizer in browser ({viewer_path})[/bold green]")

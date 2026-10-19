@@ -13,4 +13,12 @@ except Exception:
 # Aliases
 reason = record_reason
 
-__all__ = ["__version__", "observe", "track", "execution_scope", "span_scope", "record_reason", "reason"]
+__all__ = [
+    "__version__",
+    "execution_scope",
+    "observe",
+    "reason",
+    "record_reason",
+    "span_scope",
+    "track",
+]

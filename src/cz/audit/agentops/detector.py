@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from typing import List, Optional
+
 from cz.scanner.models import ObservabilityPackage
 
 
@@ -13,7 +13,7 @@ class AgentOpsDetector:
         self.display_name = "AgentOps"
         self.category = "Agent Monitoring & Replay"
 
-    def check_manifest(self, manifest_content: str, filename: str) -> Optional[ObservabilityPackage]:
+    def check_manifest(self, manifest_content: str, filename: str) -> ObservabilityPackage | None:
         pattern = r"(?i)(?:^|[\"'\s,])(agentops)(?:\[[^\]]*\])?([><=~!].*)?(?:$|[\"'\s,\n])"
         match = re.search(pattern, manifest_content, re.MULTILINE)
         if match:
@@ -27,8 +27,8 @@ class AgentOpsDetector:
             )
         return None
 
-    def get_known_env_vars(self) -> List[str]:
+    def get_known_env_vars(self) -> list[str]:
         return ["AGENTOPS_API_KEY"]
 
-    def get_known_decorators(self) -> List[str]:
+    def get_known_decorators(self) -> list[str]:
         return ["record_action", "track_agent"]

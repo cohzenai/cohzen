@@ -1,12 +1,9 @@
 """Unit tests for FrameworkRegistry and custom framework extension."""
 
 import ast
-from typing import List
-import pytest
 
-from cz.scanner.models import GraphInfo
-from cz.detectors.base import BaseFrameworkScanner
 from cz.detectors.registry import FrameworkRegistry
+from cz.scanner.models import GraphInfo
 
 
 class MockCustomFrameworkScanner:
@@ -17,7 +14,7 @@ class MockCustomFrameworkScanner:
     def reset(self, file_path: str):
         self.detected = []
 
-    def visit_assign(self, targets: List[ast.AST], value: ast.AST, lineno: int):
+    def visit_assign(self, targets: list[ast.AST], value: ast.AST, lineno: int):
         if isinstance(value, ast.Call) and getattr(value.func, "id", "") == "CustomAgent":
             self.detected.append(
                 GraphInfo(
@@ -35,7 +32,7 @@ class MockCustomFrameworkScanner:
     def visit_return(self, node: ast.Return):
         pass
 
-    def get_graphs(self) -> List[GraphInfo]:
+    def get_graphs(self) -> list[GraphInfo]:
         return self.detected
 
 

@@ -1,7 +1,7 @@
-from langgraph.graph import StateGraph, START, END
-from langgraph.prebuilt import ToolNode
-from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_community.tools.sql_database.tool import QuerySQLDataBaseTool
+from langchain_community.tools.tavily_search import TavilySearchResults
+from langgraph.graph import END, START, StateGraph
+from langgraph.prebuilt import ToolNode
 
 # External tool objects
 tavily_tool = TavilySearchResults(max_results=3)
@@ -10,8 +10,10 @@ sql_tool = QuerySQLDataBaseTool()
 tools = [tavily_tool, sql_tool]
 tool_node = ToolNode(tools)
 
+
 def agent(state):
     return {"messages": ["call tools"]}
+
 
 builder = StateGraph(dict)
 builder.add_node("agent", agent)

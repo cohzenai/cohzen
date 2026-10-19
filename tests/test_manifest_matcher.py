@@ -1,8 +1,16 @@
 """Tests for ManifestMatcher linking spans to AST entities."""
 
 from pathlib import Path
+
 from cz.execution.manifest_matcher import ManifestMatcher
-from cz.manifest.schema import CohzenManifest, GraphDef, ManifestMetadata, ModelDef, NodeDef, ToolDef
+from cz.manifest.schema import (
+    CohzenManifest,
+    GraphDef,
+    ManifestMetadata,
+    ModelDef,
+    NodeDef,
+    ToolDef,
+)
 
 
 def test_manifest_matcher_with_sample_manifest(tmp_path: Path):

@@ -14,7 +14,7 @@ Tests cz against 10 distinct architectural patterns and challenging repository l
 """
 
 from pathlib import Path
-import pytest
+
 from cz.scanner.engine import scan_repository
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures" / "real_world"
@@ -188,4 +188,3 @@ def test_10_dynamic_or_partially_unresolvable():
     agent_node = next(n for n in manifest.nodes if n.id == "agent")
     assert agent_node.resolution.status == "resolved"
     assert agent_node.classification.role == "agent"
-

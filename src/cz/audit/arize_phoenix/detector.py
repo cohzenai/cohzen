@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from typing import List, Optional
+
 from cz.scanner.models import ObservabilityPackage
 
 
@@ -13,7 +13,7 @@ class ArizePhoenixDetector:
         self.display_name = "Arize Phoenix"
         self.category = "LLM Observability & Tracing"
 
-    def check_manifest(self, manifest_content: str, filename: str) -> Optional[ObservabilityPackage]:
+    def check_manifest(self, manifest_content: str, filename: str) -> ObservabilityPackage | None:
         pattern = r"(?i)(?:^|[\"'\s,])(arize-phoenix|phoenix)(?:\[[^\]]*\])?([><=~!].*)?(?:$|[\"'\s,\n])"
         match = re.search(pattern, manifest_content, re.MULTILINE)
         if match:
@@ -27,8 +27,8 @@ class ArizePhoenixDetector:
             )
         return None
 
-    def get_known_env_vars(self) -> List[str]:
+    def get_known_env_vars(self) -> list[str]:
         return ["PHOENIX_API_KEY", "PHOENIX_COLLECTOR_ENDPOINT", "PHOENIX_PROJECT_NAME"]
 
-    def get_known_decorators(self) -> List[str]:
+    def get_known_decorators(self) -> list[str]:
         return ["trace"]

@@ -1,8 +1,6 @@
 """Tests for LangGraph class detection, state schemas, and compilation configurations."""
 
-import ast
 from pathlib import Path
-import pytest
 
 from cz.scanner import scan_python_file
 

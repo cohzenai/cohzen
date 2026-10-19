@@ -16,7 +16,12 @@ from cz.scanner.models import (
     ToolNodeDef,
     ToolsBoundInfo,
 )
-from cz.scanner.visitor import FileScanResult, UnifiedASTVisitor, parse_and_scan_file, scan_python_file
+from cz.scanner.visitor import (
+    FileScanResult,
+    UnifiedASTVisitor,
+    parse_and_scan_file,
+    scan_python_file,
+)
 
 __all__ = [
     "AgentDef",
@@ -34,6 +39,7 @@ __all__ = [
     "ToolNodeDef",
     "ToolsBoundInfo",
     "UnifiedASTVisitor",
+    "parse_and_scan_file",
     "scan_file",
     "scan_python_file",
     "scan_repository",

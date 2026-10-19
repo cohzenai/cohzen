@@ -1,7 +1,8 @@
 """Tests for CohzenCallbackHandler and instrumentation hooks."""
 
-from pathlib import Path
 import uuid
+from pathlib import Path
+
 import pytest
 
 from cz.execution.callbacks import CohzenCallbackHandler
@@ -43,7 +44,10 @@ def test_callback_handler_full_graph_flow(temp_store: SQLiteExecutionStore):
 
     # 3. LLM inside planner starts
     handler.on_chat_model_start(
-        serialized={"name": "ChatOpenAI", "id": ["langchain", "chat_models", "openai", "ChatOpenAI"]},
+        serialized={
+            "name": "ChatOpenAI",
+            "id": ["langchain", "chat_models", "openai", "ChatOpenAI"],
+        },
         messages=[[{"role": "user", "content": "analyze"}]],
         run_id=llm_run_id,
         parent_run_id=node_run_id,

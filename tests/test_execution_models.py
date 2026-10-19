@@ -1,8 +1,5 @@
 """Tests for execution, span, and event data models."""
 
-from datetime import datetime, timezone
-import pytest
-
 from cz.execution.models import Event, Execution, Span, generate_short_id
 
 

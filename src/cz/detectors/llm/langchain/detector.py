@@ -3,11 +3,19 @@
 from __future__ import annotations
 
 import ast
-from typing import List, Optional
-from cz.scanner.utils import ast_to_str, extract_list_of_strings
-from cz.scanner.models import LLMCallSite, ToolsBoundInfo
 
-KNOWN_LANGCHAIN_METHODS = {"invoke", "ainvoke", "stream", "astream", "batch", "abatch", "generate"}
+from cz.scanner.models import LLMCallSite, ToolsBoundInfo
+from cz.scanner.utils import ast_to_str, extract_list_of_strings
+
+KNOWN_LANGCHAIN_METHODS = {
+    "invoke",
+    "ainvoke",
+    "stream",
+    "astream",
+    "batch",
+    "abatch",
+    "generate",
+}
 
 
 class LangChainLLMDetector:
@@ -16,11 +24,18 @@ class LangChainLLMDetector:
     def __init__(self) -> None:
         self.provider_name = "langchain"
 
-    def detect_call(self, call: ast.Call, file_path: str, lineno: int) -> Optional[LLMCallSite]:
+    def detect_call(self, call: ast.Call, file_path: str, lineno: int) -> LLMCallSite | None:
         if isinstance(call.func, ast.Attribute) and call.func.attr in KNOWN_LANGCHAIN_METHODS:
             caller = ast_to_str(call.func.value)
             caller_lower = caller.lower()
-            if caller_lower in ("runner", "clirunner", "cli_runner", "app", "context", "ctx") or caller_lower.endswith("runner"):
+            if caller_lower in (
+                "runner",
+                "clirunner",
+                "cli_runner",
+                "app",
+                "context",
+                "ctx",
+            ) or caller_lower.endswith("runner"):
                 return None
             arg_summary = ast_to_str(call.args[0]) if call.args else None
             return LLMCallSite(
@@ -34,8 +49,8 @@ class LangChainLLMDetector:
         return None
 
     def detect_tools_bound(
-        self, targets: List[ast.AST], value: ast.AST, file_path: str, lineno: int
-    ) -> Optional[ToolsBoundInfo]:
+        self, targets: list[ast.AST], value: ast.AST, file_path: str, lineno: int
+    ) -> ToolsBoundInfo | None:
         if isinstance(value, ast.Call) and isinstance(value.func, ast.Attribute):
             if value.func.attr == "bind_tools":
                 callee_var = ast_to_str(value.func.value)

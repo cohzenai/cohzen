@@ -1,6 +1,7 @@
-from langgraph.graph import StateGraph, START, END
+from langgraph.graph import END, START, StateGraph
+
+from .nodes import generator_node, retriever_node
 from .state import MultiModuleState
-from .nodes import retriever_node, generator_node
 
 builder = StateGraph(MultiModuleState)
 builder.add_node("retriever", retriever_node)

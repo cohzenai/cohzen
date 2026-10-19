@@ -126,7 +126,34 @@ cz audit .
 
 # Export audit findings and coverage as JSON for CI/CD gates
 cz audit . --json
+
+# CI / CD gate enforcement (fails with code 1 if under 80% coverage or unconfigured)
+cz audit . --min-coverage 80 --fail-on-missing
 ```
+
+---
+
+## 🛡️ GitHub Actions & CI/CD Governance
+
+Attach Cohzen directly to your GitHub Actions pipeline using the official composite action:
+
+```yaml
+- name: Cohzen Agent Architecture & Telemetry Gate
+  uses: cohzenai/cohzen@v0.2.0
+  with:
+    path: "."
+    min-coverage: "80"
+    fail-on-missing-telemetry: "true"
+    comment-pr: "true"
+```
+
+The action automatically:
+* 📊 Audits telemetry compliance and enforces `--min-coverage` thresholds.
+* 🗺️ Renders an interactive Mermaid architecture diagram in the GitHub Step Summary.
+* 💬 Posts/updates a sticky comment on pull requests with the architecture scorecard.
+* 📦 Exports `manifest.json`, `architecture.mmd`, and `audit.json` build artifacts.
+
+See the complete [CI/CD Integration Guide](docs/ci-cd.md) for full configuration options.
 
 ---
 

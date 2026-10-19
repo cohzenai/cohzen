@@ -17,10 +17,10 @@ from typing import TypedDict
 from langchain_core.tools import tool
 from langgraph.graph import END, START, StateGraph
 
-
 # ============================================================================
 # State Definition
 # ============================================================================
+
 
 class QuestionAnsweringState(TypedDict):
     question: str
@@ -32,6 +32,7 @@ class QuestionAnsweringState(TypedDict):
 # ============================================================================
 # LangChain Tool: Google Search
 # ============================================================================
+
 
 @tool
 def google_search(query: str) -> str:
@@ -49,6 +50,7 @@ def google_search(query: str) -> str:
 # Dummy LLM Function
 # ============================================================================
 
+
 def dummy_llm_synthesize(prompt: str) -> str:
     """Analyze search findings and synthesize technical arguments via LLM."""
     time.sleep(0.12)  # Simulate model inference latency
@@ -62,6 +64,7 @@ def dummy_llm_synthesize(prompt: str) -> str:
 # ============================================================================
 # Graph Nodes
 # ============================================================================
+
 
 def search_node(state: QuestionAnsweringState) -> dict:
     """Search Google using the LangChain tool to gather relevant real-time context."""
@@ -88,11 +91,7 @@ def summarize_node(state: QuestionAnsweringState) -> dict:
     insights = state.get("insights", "")
     search_results = state.get("search_results", "")
 
-    summary = (
-        f"### Answer to: '{question}'\n\n"
-        f"**Synthesis:**\n{insights}\n\n"
-        f"**Source Data:**\n{search_results}"
-    )
+    summary = f"### Answer to: '{question}'\n\n**Synthesis:**\n{insights}\n\n**Source Data:**\n{search_results}"
     return {"summary": summary}
 
 
@@ -121,6 +120,7 @@ app.name = "search_summary_agent"
 # ============================================================================
 # Demo Runner
 # ============================================================================
+
 
 def run_demo() -> None:
     print("━" * 60)
