@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-19
+
 ### License
 - **License Change**: Changed project open-source license from MIT to **Apache 2.0** (`Apache-2.0`) with an explicit `NOTICE` attribution file. *(Note: previously published release v0.2.0 on PyPI was released under MIT).*
 
