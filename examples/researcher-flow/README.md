@@ -2,7 +2,7 @@
 
 This example demonstrates a complete **Deep Researcher Agentic Workflow** built with LangGraph, executed with zero-cost **dummy LLM calls** and simulated research tools.
 
-> **Zero User Action Required**: The application code in [`app.py`](file:///Users/aarora/Dev/cohzen-ai/cz/examples/researcher-flow/app.py) contains **no decorators** (`@cz.observe`), **no manual spans**, and **no `import cz`**. Running `cz init` automatically detects the architecture and enables dynamic runtime auto-instrumentation!
+> **Zero User Action Required**: The application code in [`app.py`](app.py) contains **no decorators** (`@cz.observe`), **no manual spans**, and **no `import cz`**. Running `cz init` automatically detects the architecture and enables dynamic runtime auto-instrumentation!
 
 ---
 
