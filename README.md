@@ -2,7 +2,7 @@
 
 **Cohzen** is a local-first toolkit that statically reconstructs, audits, and records LangGraph applications without runtime execution.
 
-[![CI](https://github.com/cohzenai/cohzen/actions/workflows/tests.yml/badge.svg)](https://github.com/cohzenai/cohzen/actions/workflows/tests.yml)
+[![CI](https://github.com/cohzenai/cohzen/actions/workflows/ci.yml/badge.svg)](https://github.com/cohzenai/cohzen/actions/workflows/ci.yml)
 [![PyPI version](https://img.shields.io/pypi/v/cohzen.svg)](https://pypi.org/project/cohzen/)
 [![Python versions](https://img.shields.io/pypi/pyversions/cohzen.svg)](https://pypi.org/project/cohzen/)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
