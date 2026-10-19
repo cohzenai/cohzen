@@ -1,22 +1,30 @@
 # Contributing to Cohzen
 
-Thank you for your interest in contributing to **Cohzen**! We welcome contributions from the community to make static agentic architecture discovery fast, accurate, and developer-friendly.
+Welcome, and thank you for your interest in contributing to **Cohzen (`cz`)**! Cohzen is an open-source, local-first toolkit that reconstructs, audits, and records LangGraph architectures.
+
+This project is maintained part-time by a solo builder. We deeply appreciate community contributions—from bug fixes and documentation polish to new framework and observability detectors.
 
 ---
 
 ## Code of Conduct
 
-Please be respectful, collaborative, and constructive when interacting with maintainers and other contributors.
+All contributors and participants are expected to adhere to our [Code of Conduct](CODE_OF_CONDUCT.md). Please report any concerns to **cohzen.ai@gmail.ai**.
 
 ---
 
-## Development Setup
+## Prerequisites
 
-Cohzen requires **Python 3.10+**.
+- **Python 3.10, 3.11, 3.12, or 3.13**
+- **Git**
+- Recommended: [`uv`](https://docs.astral.sh/uv/) for fast virtualenv and dependency management, or standard `pip` / `venv`.
 
-1. **Clone the repository**:
+---
+
+## Getting Started
+
+1. **Fork and clone the repository**:
    ```bash
-   git clone https://github.com/cohzen-ai/cohzen.git
+   git clone https://github.com/<your-username>/cohzen.git
    cd cohzen
    ```
 
@@ -29,149 +37,108 @@ Cohzen requires **Python 3.10+**.
 3. **Install in editable mode with development dependencies**:
    ```bash
    pip install -e ".[dev]"
+   # or with uv:
+   # uv pip install -e ".[dev]"
    ```
 
-4. **Verify the installation**:
+4. **Verify tests pass locally**:
    ```bash
-   cz version
-   pytest tests/ -v
+   pytest
    ```
 
 ---
 
-## Repository Structure
+## Making a Change
 
-```text
-cohzen/
-├── .github/                       # CI/CD workflows & community templates
-│   ├── workflows/
-│   │   ├── tests.yml              # Multi-Python (3.10, 3.11, 3.12) test matrix
-│   │   └── release.yml            # Automated PyPI release workflow
-│   ├── ISSUE_TEMPLATE/
-│   │   ├── bug_report.md          # Bug report template
-│   │   └── feature_request.md     # Feature/detector request template
-│   └── pull_request_template.md   # PR checklist and guidelines
-│
-├── docs/                          # Comprehensive technical documentation
-│   ├── architecture.md            # Static AST engine & pipeline architecture
-│   ├── manifest.md                # CohzenManifest v0.1 JSON specification
-│   ├── supported-frameworks.md    # Framework & LLM detector matrix
-│   └── development.md             # Contributor development workflow
-│
-├── examples/                      # Runnable standalone LangGraph examples
-│   ├── langgraph-basic/           # ProcessState pipeline with MemorySaver
-│   ├── langgraph-tools/           # MessagesState agent with ToolNode & lambda routing
-│   └── langgraph-routing/         # Supervisor team with conditional routing & interrupts
-│
-├── src/cz/                        # Core codebase
-│   ├── cli/                       # Typer-based CLI application (`main.py`)
-│   │   ├── __init__.py
-│   │   └── main.py                # Commands: cz scan, cz audit, cz view, cz version
-│   │
-│   ├── scanner/                   # AST analysis engine, visitor, and data models
-│   │   ├── __init__.py
-│   │   ├── engine.py              # Repository scan orchestrator (scan_repository, scan_file)
-│   │   ├── visitor.py             # AST visitor & symbol resolver (scan_python_file)
-│   │   ├── utils.py               # AST string & expression extractors
-│   │   └── models.py              # ScanResult, GraphInfo, NodeInfo, ToolDef, etc.
-│   │
-│   ├── manifest/                  # Immutable Cohzen Manifest v0.1 Contract
-│   │   ├── __init__.py
-│   │   ├── schema.py              # CohzenManifest, GraphDef, NodeDef, ToolDef, ModelDef
-│   │   └── builder.py             # Deterministic Manifest compilation
-│   │
-│   ├── detectors/                 # Static pattern detectors
-│   │   ├── __init__.py
-│   │   ├── base.py                # BaseFrameworkScanner, BaseLLMDetector, BaseToolDetector
-│   │   ├── registry.py            # FrameworkRegistry
-│   │   ├── langgraph/             # LangGraph framework detector (StateGraph, nodes, edges)
-│   │   ├── llm/                   # Frozen v0.1 LLM provider detectors
-│   │   │   ├── base.py
-│   │   │   ├── registry.py        # LLMRegistry
-│   │   │   ├── openai/
-│   │   │   ├── anthropic/
-│   │   │   ├── google/
-│   │   │   ├── groq/
-│   │   │   ├── grok/
-│   │   │   ├── langchain/
-│   │   │   └── litellm/
-│   │   └── tools/                 # Tool detector (@tool decorators, line spans)
-│   │       ├── __init__.py
-│   │       └── detector.py
-│   │
-│   ├── audit/                     # Observability & telemetry governance engine
-│   │   ├── __init__.py
-│   │   ├── engine.py              # Audit orchestrator (audit_repository, scan_manifest_files)
-│   │   ├── registry.py            # Observability detector registry
-│   │   ├── base.py                # BaseObservabilityDetector protocol
-│   │   ├── langsmith/
-│   │   ├── langfuse/
-│   │   ├── opentelemetry/
-│   │   ├── arize_phoenix/
-│   │   ├── traceloop/
-│   │   ├── agentops/
-│   │   └── wandb/
-│   │
-│   └── formatters/                # Output presentation & visualization
-│       ├── __init__.py
-│       ├── console.py             # Rich terminal architecture & audit flow reports
-│       ├── mermaid.py             # LangGraph-compatible Mermaid flowchart
-│       ├── json_fmt.py            # Cohzen Manifest JSON serializer
-│       └── viewer.py              # Interactive dark-mode HTML browser visualizer
-│
-├── tests/                         # Test suites & fixtures
-│   ├── fixtures/                  # Real-world & sample test fixtures
-│   │   ├── real_world/            # 10 production-pattern test projects (01 to 10)
-│   │   └── sample_graphs/         # Specialized graph variations
-│   ├── test_scanner.py
-│   ├── test_cli_and_formatters.py
-│   ├── test_real_world_fixtures.py
-│   ├── test_graphs_and_compilation.py
-│   ├── test_routing_and_edges.py
-│   ├── test_tools_and_nodes.py
-│   ├── test_agents_and_llms.py
-│   ├── test_llm_providers.py
-│   ├── test_observability_audit.py
-│   ├── test_observability_providers.py
-│   ├── test_framework_registry.py
-│   └── test_engine_and_ignores.py
-│
-├── .gitignore                     # Git ignore rules
-├── pyproject.toml                 # Build configuration & entrypoint (cz = "cz.cli.main:app")
-├── LICENSE                        # MIT License
-├── README.md                      # Project documentation & overview
-├── CHANGELOG.md                   # Version release notes
-└── CONTRIBUTING.md                # Contributor guide
+### 1. Branch Naming
+Create a feature or bugfix branch off `main`:
+```bash
+git checkout -b fix/issue-description
+# or
+git checkout -b feat/new-detector-name
 ```
 
----
-
-## Core Guiding Principles
-
-When making changes to Cohzen:
-1. **Zero Runtime Execution**: Cohzen is strictly a **static AST analysis tool**. Never import or execute scanned target user code (`importlib`, `exec()`, `eval()`).
-2. **Immutable Contract**: The `CohzenManifest` (`v0.1.0`) is the single source of truth. Formats (`console`, `mermaid`, `json`, `view`) must consume discovered facts from this manifest.
-3. **Graceful Degradation**: Real-world Python can be dynamic or external. Degrade gracefully (`resolved` -> `partially_resolved` -> `unresolved`) with honest static limitations rather than crashing or guessing.
-
----
-
-## Running Tests
-
-Run the complete test suite:
+### 2. Code Quality & Linting
+Cohzen uses **[Ruff](https://docs.astral.sh/ruff/)** for fast linting and formatting. Run checks before committing:
 ```bash
+# Check code for lint issues
+ruff check .
+
+# Automatically apply safe fixes
+ruff check --fix .
+
+# Verify formatting
+ruff format --check .
+
+# Auto-format files
+ruff format .
+```
+
+### 3. Running the Test Suite
+Ensure all tests pass and coverage remains healthy:
+```bash
+# Run all tests
 pytest tests/ -v
-```
 
-Generate a test coverage report:
-```bash
+# Run with coverage report
 pytest --cov=cz --cov-report=term-missing tests/
 ```
 
 ---
 
-## Pull Request Guidelines
+## Developer Certificate of Origin (DCO) Sign-off
 
-1. **Branch naming**: `feature/your-feature-name` or `fix/your-bug-fix`.
-2. **Include tests**: Add unit tests or real-world fixtures under `tests/` demonstrating your fix or new detection pattern.
-3. **Documentation**: Update relevant guides in `docs/` or `README.md` if CLI flags or manifest schemas change.
-4. **Clean Git history**: Ensure commits are logical and well-described.
+Cohzen uses the **Developer Certificate of Origin (DCO)** instead of a heavy Contributor License Agreement (CLA). The DCO is a simple statement certifying that you wrote the code or have the legal right to submit it under the project's **Apache 2.0 License**.
+
+### How to Sign Off Your Commits
+Simply add the `-s` (or `--signoff`) flag when making git commits:
+```bash
+git commit -s -m "feat(detector): add Mistral AI LLM detector"
+```
+This automatically appends a line to your commit message:
+```text
+Signed-off-by: Your Real Name <your.email@example.com>
+```
+
+### Fixing Unsigned Commits
+If you forget `-s` on your latest commit, amend it:
+```bash
+git commit --amend --no-edit -s
+```
+If you have multiple commits in a PR branch, rebase interactively to sign off all commits:
+```bash
+git rebase --signoff origin/main
+git push --force-with-lease
+```
+
+---
+
+## Submitting a Pull Request
+
+1. **Keep PRs Focused**: One PR per bug fix, feature, or detector. Smaller PRs are much easier and faster to review.
+2. **Include Tests**: Add unit or integration tests in `tests/` covering new code or reproducing fixed bugs.
+3. **Follow the PR Template**: When opening a PR, fill out the provided checklist in `.github/pull_request_template.md`.
+4. **Ensure CI Passes**: All automated checks (linting, test suite across Python 3.10–3.13, and DCO sign-off) must pass.
+
+---
+
+## What Reviewers Look For
+
+When reviewing pull requests, we look for:
+- [x] Clear description of the problem and approach.
+- [x] DCO sign-off on all commits.
+- [x] Passing test suite without regressions.
+- [x] Ruff linting and formatting compliance.
+- [x] Preserved zero-overhead and fail-open guarantees (runtime code must never crash the user's application).
+- [x] Accurate documentation or docstrings where applicable.
+
+---
+
+## Maintainer Response Expectations
+
+Cohzen is maintained **part-time by a solo builder**:
+- **Initial PR & Issue Triage**: Typically within **48 to 72 hours**.
+- **Review Cycles**: You can expect thoughtful, constructive reviews. If a PR has been quiet for a few days, feel free to leave a polite comment to bump it.
+- **Patience**: Complex feature requests or architectural proposals may take longer to discuss and test thoroughly.
+
+Thank you for contributing to Cohzen!
