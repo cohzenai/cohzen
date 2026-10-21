@@ -16,7 +16,7 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-from cz.formatters.mermaid import format_mermaid
+from cz.formatters.mermaid import format_mermaid, generate_graph_mermaid
 from cz.scanner.engine import scan_repository
 
 
@@ -118,22 +118,65 @@ def build_markdown_summary(result, manifest_dict: dict, audit_dict: dict, mermai
             ]
         )
 
-    # Mermaid diagram in collapsible block
-    clean_mermaid = mermaid_code.strip()
+    # Mermaid diagrams in collapsible blocks (one ```mermaid block per graph)
     lines.extend(
         [
             "",
             "### 🗺️ Architecture Flowchart",
             "",
-            "<details open>",
-            "<summary><b>Interactive LangGraph Architecture Diagram</b> (click to toggle)</summary>",
-            "",
-            "```mermaid",
-            clean_mermaid,
-            "```",
-            "",
-            "</details>",
-            "",
+        ]
+    )
+
+    if not result.graphs:
+        lines.extend(
+            [
+                "<details open>",
+                "<summary><b>Interactive LangGraph Architecture Diagram</b> (click to toggle)</summary>",
+                "",
+                "```mermaid",
+                "%% No LangGraph workflows detected.",
+                "```",
+                "",
+                "</details>",
+                "",
+            ]
+        )
+    elif len(result.graphs) == 1:
+        clean_mermaid = generate_graph_mermaid(result.graphs[0], scan_result=result).strip()
+        lines.extend(
+            [
+                "<details open>",
+                "<summary><b>Interactive LangGraph Architecture Diagram</b> (click to toggle)</summary>",
+                "",
+                "```mermaid",
+                clean_mermaid,
+                "```",
+                "",
+                "</details>",
+                "",
+            ]
+        )
+    else:
+        for idx, graph in enumerate(result.graphs, start=1):
+            g_markup = generate_graph_mermaid(graph, scan_result=result).strip()
+            title = f"Graph #{idx}: {graph.graph_var} ({graph.graph_class})"
+            rel_path = Path(graph.file_path).name
+            lines.extend(
+                [
+                    f"<details{' open' if idx == 1 else ''}>",
+                    f"<summary><b>{title}</b> &mdash; <code>{rel_path}:{graph.line_number}</code></summary>",
+                    "",
+                    "```mermaid",
+                    g_markup,
+                    "```",
+                    "",
+                    "</details>",
+                    "",
+                ]
+            )
+
+    lines.extend(
+        [
             "---",
             "*Report generated automatically by [Cohzen (`cz`)](https://github.com/cohzenai/cohzen)*",
         ]
