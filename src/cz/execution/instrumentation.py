@@ -18,6 +18,7 @@ from cz.execution.writer import AsyncExecutionStore
 from cz.project import load_config
 
 _PATCHED: dict[tuple[type[Any], str], Callable[..., Any]] = {}
+_ADDED_ATTRIBUTES: set[tuple[type[Any], str]] = set()
 _NOTICE_EMITTED = False
 
 
@@ -146,24 +147,52 @@ def _patch_class(cls: type[Any]) -> None:
         "astream": _wrap_astream,
     }.items():
         key = (cls, method)
-        if key in _PATCHED or method not in cls.__dict__:
+        if key in _PATCHED:
+            continue
+        # Avoid patching inherited methods if an ancestor is already patched
+        if any((base, method) in _PATCHED for base in cls.__mro__[1:]):
+            continue
+        if not hasattr(cls, method):
             continue
         original = getattr(cls, method)
         _PATCHED[key] = original
+        if method not in cls.__dict__:
+            _ADDED_ATTRIBUTES.add(key)
         setattr(cls, method, factory(original, f"{cls.__name__}.{method}"))
 
 
 def _patch_compiled_graphs() -> None:
     """Patch only LangGraph compiled graph classes, never builders or Runnable."""
+    candidates: list[type[Any]] = []
     for module_name, class_name in (
         ("langgraph.pregel.main", "Pregel"),
+        ("langgraph.pregel.base", "Pregel"),
+        ("langgraph.pregel", "Pregel"),
         ("langgraph.graph.state", "CompiledStateGraph"),
         ("langgraph.graph.graph", "CompiledGraph"),
     ):
         module = sys.modules.get(module_name)
+        if not module and "langgraph" in sys.modules:
+            try:
+                import importlib
+
+                module = importlib.import_module(module_name)
+            except Exception:
+                pass
         cls = getattr(module, class_name, None) if module else None
-        if isinstance(cls, type):
-            _patch_class(cls)
+        if isinstance(cls, type) and cls not in candidates:
+            candidates.append(cls)
+
+    # Also resolve Pregel from base classes of any compiled graph candidate
+    for c in list(candidates):
+        for base in c.__mro__:
+            if getattr(base, "__name__", "") == "Pregel" and isinstance(base, type) and base not in candidates:
+                candidates.append(base)
+
+    # Patch base classes first (e.g. Pregel before CompiledStateGraph)
+    candidates.sort(key=lambda c: len(c.__mro__))
+    for cls in candidates:
+        _patch_class(cls)
 
 
 def install(store: ExecutionStore | None = None, project: Path | None = None) -> None:
@@ -192,8 +221,16 @@ def install(store: ExecutionStore | None = None, project: Path | None = None) ->
 def uninstall() -> None:
     """Restore patched compiled-graph methods; intended for tests and explicit teardown."""
     for (cls, method), original in list(_PATCHED.items()):
-        setattr(cls, method, original)
+        key = (cls, method)
+        if key in _ADDED_ATTRIBUTES:
+            try:
+                delattr(cls, method)
+            except AttributeError:
+                setattr(cls, method, original)
+        else:
+            setattr(cls, method, original)
     _PATCHED.clear()
+    _ADDED_ATTRIBUTES.clear()
 
 
 def track(store: ExecutionStore | None = None) -> None:

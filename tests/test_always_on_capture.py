@@ -7,6 +7,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
+
+pytest.importorskip("langgraph")
 from langgraph.graph import END, START, StateGraph
 
 from cz.execution.instrumentation import install, uninstall

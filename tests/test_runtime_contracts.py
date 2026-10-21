@@ -9,6 +9,9 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+
+pytest.importorskip("langgraph")
+pytest.importorskip("langchain_core")
 from langchain_core.callbacks import BaseCallbackHandler, CallbackManager
 from langgraph.graph import END, START, StateGraph
 
