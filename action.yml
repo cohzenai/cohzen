@@ -63,7 +63,7 @@ runs:
   using: "composite"
   steps:
     - name: Ensure Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ inputs.python-version }}
         check-latest: false
@@ -108,7 +108,7 @@ runs:
 
     - name: Upload Cohzen Architecture Manifest
       if: inputs.export-manifest == 'true' && always()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: cohzen-manifest
         path: cz-manifest.json
@@ -116,7 +116,7 @@ runs:
 
     - name: Upload Cohzen Mermaid Architecture Diagram
       if: inputs.export-mermaid == 'true' && always()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: cohzen-mermaid
         path: cz-architecture.mmd
@@ -124,7 +124,7 @@ runs:
 
     - name: Upload Cohzen Observability Audit
       if: always()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: cohzen-audit
         path: cz-audit.json
