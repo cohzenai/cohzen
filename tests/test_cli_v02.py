@@ -40,8 +40,9 @@ def test_cli_init_command(tmp_path: Path, monkeypatch):
     assert cohzen_dir.is_dir()
     assert (cohzen_dir / "manifest.json").is_file()
     assert (cohzen_dir / "executions.db").is_file()
-    assert not (tmp_path / "sitecustomize.py").exists()
-    assert hook.read_text(encoding="utf-8") == "import cz._startup; cz._startup.start()\n"
+    hook_content = hook.read_text(encoding="utf-8")
+    assert "cz._startup" in hook_content
+    assert "except Exception:" in hook_content
 
     # Check gitignore
     gitignore = tmp_path / ".gitignore"

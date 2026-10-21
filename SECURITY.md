@@ -10,6 +10,7 @@ Security fixes and patches are applied to the latest release line and the main b
 
 | Version | Supported          |
 | ------- | ------------------ |
+| 0.3.x   | :white_check_mark: |
 | 0.2.x   | :white_check_mark: |
 | < 0.2.0 | :x:                |
 
@@ -24,7 +25,7 @@ Instead, please use one of the following private channels:
 1. **GitHub Private Vulnerability Reporting (Preferred)**:
    Navigate to the repository's **Security** tab, click **Advisories**, and select **Report a vulnerability**. This creates a private draft advisory where we can discuss the issue confidentially.
 2. **Email**:
-   Send an encrypted or direct email to **cohzen.ai@gmail.ai** with the subject `[SECURITY] Cohzen Vulnerability Report`.
+   Send an encrypted or direct email to **security@cohzen.ai** with the subject `[SECURITY] Cohzen Vulnerability Report`.
 
 Please include:
 - A description of the vulnerability and its potential impact.
@@ -38,7 +39,7 @@ Cohzen is maintained part-time by a solo builder. You can expect an initial ackn
 
 ## Local Telemetry & Data Handling
 
-Cohzen is designed to be **privacy-first, local-first, and zero-egress**.
+Cohzen is designed to be **privacy-first and local-first**.
 
 ### What Cohzen Stores Locally
 When always-on capture or `cz capture` is active, Cohzen records:
@@ -57,7 +58,7 @@ your-project/
 ```
 
 ### Zero Telemetry Egress
-**Cohzen does not phone home.** No telemetry traces, states, inputs, outputs, tokens, or analytics are transmitted to external servers, cloud backends, or third parties. All network operations in the core CLI are zero-egress.
+**Cohzen's CLI does not phone home.** The CLI does not transmit source code, prompts, state values, or run data to external servers or cloud backends. External communication (such as GitHub Actions PR comments or future telemetry export) is strictly opt-in and under user control.
 
 ### Automatic Secret Redaction
 Before any data is written to the local SQLite database, it passes through Cohzen's built-in redaction processor:

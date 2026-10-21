@@ -52,3 +52,31 @@ def test_startup_fail_open_when_activation_is_broken(tmp_path: Path, monkeypatch
         __import__("langgraph")
     except RuntimeError as exc:  # pragma: no cover - assertion is clearer than swallowing
         raise AssertionError("Cohzen startup leaked an error") from exc
+
+
+def test_pth_hook_silence_when_uninstalled(tmp_path: Path):
+    import subprocess
+    import sys
+
+    hook_content = (
+        'import sys; exec("try:\\n    import cz._startup; cz._startup.start()\\nexcept Exception:\\n    pass")\n'
+    )
+    pth_file = tmp_path / "cohzen_startup.pth"
+    pth_file.write_text(hook_content, encoding="utf-8")
+
+    # Run Python in a subprocess where site-packages loads this .pth,
+    # but cz is masked to simulate `pip uninstall cohzen` without prior `cz deinit`.
+    masking_code = (
+        f"import site, sys; "
+        f'sys.modules["cz"] = None; sys.modules["cz._startup"] = None; '
+        f'site.addsitedir(r"{tmp_path}"); '
+        f'print("startup_ok")'
+    )
+    res = subprocess.run(
+        [sys.executable, "-c", masking_code],
+        capture_output=True,
+        text=True,
+    )
+    assert res.returncode == 0
+    assert "startup_ok" in res.stdout
+    assert res.stderr.strip() == ""

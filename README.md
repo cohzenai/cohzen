@@ -186,7 +186,7 @@ Cohzen is continuously tested across the following matrix:
 | Component | Supported Range | Verified Versions | Notes |
 |---|---:|---:|---|
 | **Python** | `>=3.10` | 3.10, 3.11, 3.12, 3.13 | Native AST parsing across all language versions. |
-| **LangGraph** | `>=0.2,<1.3` | 0.2.76, 1.0.10, 1.1.10, 1.2.16 | `StateGraph`, `Graph`, `MessageGraph`, `ToolNode`, compiled graph hooks. |
+| **LangGraph** | `>=0.2,<1.3` | 0.2.76, 1.0.10, 1.1.10, 1.2.16 | `StateGraph`, `Graph`, `MessageGraph`, `ToolNode`, compiled graph hooks. LangGraph 0.2.x is retained on a best-effort basis. |
 | **LangChain Core** | `>=0.2,<1.7` | 1.6.6 | Safe copy-on-write callback propagation. |
 | **OpenTelemetry API** | `>=1.20,<2.0` | 1.45.0 | Telemetry auditing and attribute detection. |
 
@@ -196,11 +196,11 @@ See [docs/supported-frameworks.md](docs/supported-frameworks.md) for the complet
 
 ## 🔒 Privacy & Data Handling
 
-Cohzen is built on strict **local-first** and **zero-egress** principles:
+Cohzen is built on strict **local-first** principles:
 
-1. **Zero Network Egress**: Cohzen never transmits source code, prompts, state values, or execution data across the network. All static analysis, manifest generation, and runtime capture occur purely on your local machine.
+1. **Local CLI Execution**: Cohzen's CLI does not send your code, prompts, or run data anywhere. Analysis and execution recording run purely on your local machine. External communication (such as GitHub Actions PR comments or future OTLP telemetry export) is strictly opt-in and under user control.
 2. **Local SQLite Storage**: When local capture is enabled (`cz init` or `cz capture`), runtime records are stored in a local SQLite database (`.cohzen/executions.db`) that is automatically added to your `.gitignore`.
-3. **Automatic Secret Redaction**: Before runtime payloads are committed to SQLite, Cohzen runs sensitive keys through a redaction processor that scrubs passwords, API keys, bearer tokens, private keys, and credential patterns (AWS, OpenAI, GitHub, Anthropic).
+3. **Pattern-Based, Best-Effort Secret Redaction**: Before runtime payloads are committed to SQLite, Cohzen runs sensitive keys and text through a configurable redaction processor that masks common API keys, passwords, bearer tokens, and credential patterns (e.g. AWS, OpenAI, GitHub). Heuristic pattern matching is best-effort and cannot guarantee detection of custom token formats or proprietary secrets embedded in unstructured prompt text.
 4. **Configurable Retention**: Control data volume via `.cohzen/config.toml` with strict caps on payload size (`max_payload_bytes`), run history (`max_runs`), and age (`max_age_days`).
 5. **Fail-Open Architecture**: Runtime hooks fail open: if any capture error or database write occurs, your application execution continues unaffected without raising exceptions.
 
@@ -215,6 +215,8 @@ To maintain trust and predictability, here is what Cohzen does **not** do:
 * **Static AST Limitations**: `cz scan` inspects source code without importing or executing it. It cannot resolve dynamically constructed node names (e.g. `graph.add_node(eval(var))`), graphs assembled from remote network responses, or runtime metaprogramming.
 * **LangGraph Focus**: Static scanning is currently optimized for LangGraph applications. Support for LlamaIndex Workflows, CrewAI, and AutoGen is in design and scheduled on our [ROADMAP.md](ROADMAP.md).
 * **Local Development Capture**: The runtime capture engine is designed for local developer iteration, testing, and debugging. It is not intended as a multi-tenant, high-throughput production APM.
+* **Uninstalling the Hook**: Always run `cz deinit` before running `pip uninstall cohzen` to cleanly unregister the environment's `.pth` startup hook.
+* **Execution Side Effects**: Any execution under capture runs real user code with real side effects (making live LLM API calls and executing live tool handlers). Deterministic, mocked offline replay does not yet exist.
 * **Manifest Stability**: `cz scan --json` emits the immutable **CohzenManifest v0.1** specification. Manifest schemas are strictly versioned (see [docs/manifest.md](docs/manifest.md)).
 
 ---

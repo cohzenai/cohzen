@@ -179,7 +179,10 @@ def init(
 
     if hook_path:
         hook_path.parent.mkdir(parents=True, exist_ok=True)
-        hook_path.write_text("import cz._startup; cz._startup.start()\n", encoding="utf-8")
+        hook_path.write_text(
+            'import sys; exec("try:\\n    import cz._startup; cz._startup.start()\\nexcept Exception:\\n    pass")\n',
+            encoding="utf-8",
+        )
         legacy_hook = hook_path.parent / "cohzen.pth"
         if legacy_hook.is_file():
             legacy_hook.unlink()
