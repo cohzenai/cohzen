@@ -4,7 +4,7 @@ A minimal linear workflow demonstrating:
 - StateGraph with TypedDict schema (`ProcessState`)
 - Input validation and transform logic nodes
 - Sequential direct edges (`START -> validate -> transform -> END`)
-- MemorySaver checkpointer compilation
+- Compiled graph execution
 
 ### Scan with Cohzen:
 ```bash

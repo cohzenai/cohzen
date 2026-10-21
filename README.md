@@ -167,7 +167,7 @@ jobs:
       - run: pip install cohzen
 
       - name: Cohzen Agent Architecture & Telemetry Gate
-        uses: cohzenai/cohzen@v0.3.0
+        uses: cohzenai/cohzen@v0.3.1
         with:
           path: "."
           min-coverage: "80"
@@ -186,6 +186,7 @@ Cohzen is continuously tested across the following matrix:
 | Component | Supported Range | Verified Versions | Notes |
 |---|---:|---:|---|
 | **Python** | `>=3.10` | 3.10, 3.11, 3.12, 3.13 | Native AST parsing across all language versions. |
+| **Operating System** | macOS, Linux | macOS (ARM64/x86_64), Ubuntu Linux | Always-on startup hook verified on POSIX. Windows is experimental. |
 | **LangGraph** | `>=0.2,<1.3` | 0.2.76, 1.0.10, 1.1.10, 1.2.16 | `StateGraph`, `Graph`, `MessageGraph`, `ToolNode`, compiled graph hooks. LangGraph 0.2.x is retained on a best-effort basis. |
 | **LangChain Core** | `>=0.2,<1.7` | 1.6.6 | Safe copy-on-write callback propagation. |
 | **OpenTelemetry API** | `>=1.20,<2.0` | 1.45.0 | Telemetry auditing and attribute detection. |

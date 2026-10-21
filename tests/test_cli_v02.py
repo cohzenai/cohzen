@@ -321,3 +321,35 @@ def test_cli_deinit_keep_data_retains_executions_db(tmp_path: Path, monkeypatch)
     assert not (tmp_path / ".cohzen" / "config.toml").exists()
     assert not (tmp_path / ".cohzen" / "manifest.json").exists()
     assert not hook.exists()
+
+
+def test_migration_of_030_and_legacy_pth_hooks(tmp_path: Path, monkeypatch):
+    site_packages = tmp_path / "site-packages"
+    site_packages.mkdir(parents=True, exist_ok=True)
+    hook = site_packages / "cohzen_startup.pth"
+    legacy_hook = site_packages / "cohzen.pth"
+
+    # Write old 0.3.0 hook without try/except
+    hook.write_text("import cz._startup; cz._startup.start()\n", encoding="utf-8")
+    # Write legacy 0.2.0 hook
+    legacy_hook.write_text("import cz.execution; cz.execution.install()\n", encoding="utf-8")
+
+    cli_module = importlib.import_module("cz.cli.main")
+    monkeypatch.setattr(cli_module, "_hook_path", lambda _python: (hook, None))
+
+    # Run cz init: should overwrite hook with safe try/except and delete legacy_hook
+    init_res = runner.invoke(app, ["init", str(tmp_path), "--yes"])
+    assert init_res.exit_code == 0
+    hook_content = hook.read_text(encoding="utf-8")
+    assert "try:" in hook_content
+    assert "except Exception:" in hook_content
+    assert not legacy_hook.exists()
+
+    # If an old legacy hook was recreated alongside
+    legacy_hook.write_text("legacy hook", encoding="utf-8")
+
+    # Run cz deinit: should delete both
+    deinit_res = runner.invoke(app, ["deinit", str(tmp_path), "--yes"])
+    assert deinit_res.exit_code == 0
+    assert not hook.exists()
+    assert not legacy_hook.exists()

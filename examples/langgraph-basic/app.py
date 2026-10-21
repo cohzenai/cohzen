@@ -1,6 +1,5 @@
 from typing import TypedDict
 
-from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph
 
 
@@ -30,5 +29,8 @@ builder.add_edge(START, "validate")
 builder.add_edge("validate", "transform")
 builder.add_edge("transform", END)
 
-checkpointer = MemorySaver()
-app = builder.compile(checkpointer=checkpointer)
+app = builder.compile()
+
+if __name__ == "__main__":
+    result = app.invoke({"input_text": "hello cohzen", "step_count": 0})
+    print("Execution completed:", result)

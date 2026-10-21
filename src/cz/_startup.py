@@ -51,21 +51,27 @@ def _activate() -> None:
     global _ACTIVATED
     if _ACTIVATED:
         return
-    _ACTIVATED = True
-    try:
-        builtins.__import__ = _ORIGINAL_IMPORT
-    except Exception:
-        pass
     try:
         from importlib.metadata import version
 
         major, minor, *_ = (int(part) for part in version("langgraph").split(".")[:2])
         if not ((major == 1 and 0 <= minor <= 2) or (major == 0 and minor == 2)):
             _notice("LangGraph version is outside the tested 0.2/1.0–1.2 range; capture is off")
+            _ACTIVATED = True
+            try:
+                builtins.__import__ = _ORIGINAL_IMPORT
+            except Exception:
+                pass
             return
-        from cz.execution.instrumentation import install
+        from cz.execution.instrumentation import _PATCHED, install
 
         install(project=_eligible_project())
+        if _PATCHED:
+            _ACTIVATED = True
+            try:
+                builtins.__import__ = _ORIGINAL_IMPORT
+            except Exception:
+                pass
     except Exception:
         # Startup instrumentation must never alter the target process's behavior.
         return
