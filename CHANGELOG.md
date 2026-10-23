@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.4] - 2026-10-23
+
+### Changed
+
+- **Slim `cz init` Output**: Streamlined the `cz init` output by default to display the discovered graph topology, nodes, and routing edges, reducing terminal noise during initial repository onboarding.
+
+### Fixed
+
+- **Code Formatting & Consistency**: Applied formatting fixes across CLI handlers and formatters to maintain strict style conformance with `ruff format`.
+
 ## [0.3.3] - 2026-10-23
 
 ### Fixed
