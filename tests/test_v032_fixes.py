@@ -43,7 +43,7 @@ def test_empty_repo_audit_coverage_reports_na(tmp_path: Path):
 
     scan_res = scan_repository(str(empty_dir))
     assert scan_res.observability is not None
-    assert scan_res.observability.agent_instrumentation_pct == 0.0
+    assert scan_res.observability.agent_instrumentation_pct is None
 
 
 def test_cz_version_reads_package_metadata():
@@ -56,7 +56,7 @@ def test_cz_version_reads_package_metadata():
     try:
         expected = importlib.metadata.version("cohzen")
     except Exception:
-        expected = "0.3.2"
+        expected = "unknown"
 
     assert expected in result.stdout
     assert __version__ == expected

@@ -9,6 +9,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-10-23
+
+### Fixed
+
+- **`agent_instrumentation_pct` Returns `null` for Empty Repos**: `ObservabilityAudit.agent_instrumentation_pct`
+  now returns `None` (serialised as JSON `null`) when `total_agents == 0`, so callers can distinguish
+  "not applicable" from "0% coverage on a live codebase." All output surfaces updated:
+  - **Terminal**: continues to display `n/a, no nodes found` (no visible change).
+  - **JSON (`cz audit --json`)**: field is now `null` instead of `0.0`.
+  - **PR comment / GitHub Action output (`instrumentation-pct`)**: shows `n/a` instead of `0.0`.
+- **`--min-coverage` Gate Skipped on Empty Repos (Exit 0)**: When no agent nodes are found,
+  `--min-coverage` is now silently skipped with a single `INFO` line and exits `0` by default.
+  Use the new `--fail-on-empty` flag to treat empty repos as a CI failure instead.
+- **New `--fail-on-empty` Gate Flag**: `cz audit --fail-on-empty` exits `1` when no agent nodes are
+  detected in the scanned path. Useful for enforcing that a repository must contain LangGraph agents
+  before any governance checks run.
+- **Version Fallback is `"unknown"`**: The `except`-branch fallback in `__init__.py` is now the literal
+  string `"unknown"` rather than a hardcoded version number, preventing stale strings from drifting
+  across releases.
+
+### Added
+
+- **Exit Code Documentation**: `cz audit` docstring now documents all exit codes:
+  `0` (all checks passed or skipped on empty repo), `1` (gate check failed), `2` (usage error).
+
+### Docs
+
+- Exit codes for `cz audit` documented in command help text.
+- `--min-coverage` help text explains the new skip-on-empty behaviour and `--fail-on-empty` as the
+  alternative.
+
 ## [0.3.2] - 2026-10-23
 
 ### Fixed

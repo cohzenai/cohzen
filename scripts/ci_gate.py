@@ -69,12 +69,13 @@ def parse_args() -> argparse.Namespace:
 
 def build_markdown_summary(result, manifest_dict: dict, audit_dict: dict, mermaid_code: str) -> str:
     obs = result.observability
-    pct = obs.agent_instrumentation_pct if obs else 0.0
+    # agent_instrumentation_pct is None when no nodes found (not applicable)
+    pct = obs.agent_instrumentation_pct if obs else None
     configured = obs.is_observability_configured if obs else False
 
     status_badge = (
         "🟢 **PASSED**"
-        if (configured and pct >= 80.0)
+        if (configured and pct is not None and pct >= 80.0)
         else ("🟡 **WARNING**" if configured else "🔴 **ACTION REQUIRED**")
     )
 
@@ -96,7 +97,7 @@ def build_markdown_summary(result, manifest_dict: dict, audit_dict: dict, mermai
         "### 🛰️ Observability & Telemetry Audit",
         "",
         f"- **Telemetry Configured:** {'✅ Yes' if configured else '❌ No telemetry packages or env configs detected'}",
-        f"- **Agent Instrumentation Coverage:** **`{pct}%`** ({obs.instrumented_agents if obs else 0}/{obs.total_agents if obs else 0} nodes instrumented)",
+        f"- **Agent Instrumentation Coverage:** **`{f'{pct}%' if pct is not None else 'n/a'}` ** ({obs.instrumented_agents if obs else 0}/{obs.total_agents if obs else 0} nodes instrumented)",
         f"- **Tool Instrumentation Coverage:** **`{(round((obs.instrumented_tools / obs.total_tools) * 100, 1) if (obs and obs.total_tools) else 100.0)}%`** ({obs.instrumented_tools if obs else 0}/{obs.total_tools if obs else 0} tools instrumented)",
     ]
 
@@ -286,7 +287,7 @@ def main() -> None:
             f.write(f"total_nodes={result.total_nodes}\n")
             f.write(f"total_tools={len(result.tool_definitions)}\n")
             f.write(
-                f"instrumentation_pct={result.observability.agent_instrumentation_pct if result.observability else 0.0}\n"
+                f"instrumentation_pct={result.observability.agent_instrumentation_pct if result.observability else 'n/a'}\n"
             )
             f.write(f"manifest_path={args.manifest_output}\n")
             f.write(f"mermaid_path={args.mermaid_output}\n")
@@ -300,8 +301,14 @@ def main() -> None:
             failed_reasons.append("No LLM observability package or environment config was detected.")
 
     if args.min_coverage is not None:
-        pct = obs.agent_instrumentation_pct if obs else 0.0
-        if pct < args.min_coverage:
+        pct = obs.agent_instrumentation_pct if obs else None
+        if pct is None:
+            # No nodes found — coverage is not applicable; skip gate with INFO line.
+            print(
+                "INFO: --min-coverage skipped: no agent nodes found in scanned path. "
+                "Use --fail-on-empty to fail on empty repositories."
+            )
+        elif pct < args.min_coverage:
             failed_reasons.append(
                 f"Agent instrumentation coverage is {pct}%, below the required threshold of {args.min_coverage}%."
             )
