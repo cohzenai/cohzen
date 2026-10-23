@@ -700,8 +700,7 @@ def audit(
     # --fail-on-empty: fail if no agent nodes were found.
     if fail_on_empty and (not obs or obs.total_agents == 0):
         failed_reasons.append(
-            "No agent nodes found in the scanned path. "
-            "If this is intentional, remove --fail-on-empty."
+            "No agent nodes found in the scanned path. If this is intentional, remove --fail-on-empty."
         )
 
     if min_coverage is not None:

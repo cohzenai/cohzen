@@ -40,9 +40,7 @@ def test_audit_json_agent_instrumentation_pct_null_for_empty_repo(tmp_path: Path
     assert result.exit_code == 0, result.output
     data = json.loads(result.output)
     assert "agent_instrumentation_pct" in data
-    assert data["agent_instrumentation_pct"] is None, (
-        f"Expected null, got {data['agent_instrumentation_pct']!r}"
-    )
+    assert data["agent_instrumentation_pct"] is None, f"Expected null, got {data['agent_instrumentation_pct']!r}"
 
 
 def test_audit_terminal_still_shows_na_for_empty_repo(tmp_path: Path) -> None:
@@ -62,9 +60,7 @@ def test_audit_terminal_still_shows_na_for_empty_repo(tmp_path: Path) -> None:
 def test_min_coverage_skipped_on_empty_repo_exits_zero(tmp_path: Path) -> None:
     """--min-coverage must be skipped (exit 0, INFO line) when no nodes are found."""
     result = runner.invoke(app, ["audit", str(tmp_path), "--min-coverage", "80"])
-    assert result.exit_code == 0, (
-        f"Expected exit 0, got {result.exit_code}.\n{result.output}"
-    )
+    assert result.exit_code == 0, f"Expected exit 0, got {result.exit_code}.\n{result.output}"
     assert "--min-coverage skipped" in result.output or "INFO" in result.output, (
         "Expected an INFO line explaining the skip, got:\n" + result.output
     )
@@ -88,9 +84,7 @@ def test_fail_on_empty_exits_nonzero_for_empty_repo(tmp_path: Path) -> None:
 
 def test_fail_on_empty_and_min_coverage_both_on_empty_repo(tmp_path: Path) -> None:
     """Both --fail-on-empty and --min-coverage on an empty repo should exit 1."""
-    result = runner.invoke(
-        app, ["audit", str(tmp_path), "--fail-on-empty", "--min-coverage", "80"]
-    )
+    result = runner.invoke(app, ["audit", str(tmp_path), "--fail-on-empty", "--min-coverage", "80"])
     assert result.exit_code == 1, result.output
 
 
@@ -129,9 +123,5 @@ def test_version_fallback_is_not_hardcoded() -> None:
         f"Version fallback in {init_path} is not 'unknown'. "
         "It must be 'unknown' so stale hardcoded strings can't drift."
     )
-    assert '__version__ = "0.3.2"' not in source, (
-        "Hardcoded fallback '0.3.2' found in __init__.py — must be 'unknown'."
-    )
-    assert '__version__ = "0.3.1"' not in source, (
-        "Hardcoded fallback '0.3.1' found in __init__.py — must be 'unknown'."
-    )
+    assert '__version__ = "0.3.2"' not in source, "Hardcoded fallback '0.3.2' found in __init__.py — must be 'unknown'."
+    assert '__version__ = "0.3.1"' not in source, "Hardcoded fallback '0.3.1' found in __init__.py — must be 'unknown'."

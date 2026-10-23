@@ -432,7 +432,9 @@ def print_audit_report(result: ScanResult, console: Console | None = None) -> No
         f"[bold cyan]Tracing Coverage:[/bold cyan]    Nodes: {nodes_cov_str}  •  Tools: [{tool_color}]{obs.instrumented_tools}/{obs.total_tools}[/{tool_color}]"
     )
 
-    panel_color = "green" if obs.is_observability_configured and (obs.agent_instrumentation_pct or 0.0) > 50 else "yellow"
+    panel_color = (
+        "green" if obs.is_observability_configured and (obs.agent_instrumentation_pct or 0.0) > 50 else "yellow"
+    )
     console.print(
         Panel(
             Text.from_markup("\n".join(obs_lines)),
