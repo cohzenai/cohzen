@@ -17,7 +17,7 @@ from rich.console import Console
 
 from cz import __version__
 from cz.execution.sqlite import SQLiteExecutionStore
-from cz.formatters.console import print_audit_report, print_console_report
+from cz.formatters.console import print_audit_report, print_console_report, print_topology_report
 from cz.formatters.execution_fmt import print_execution_detail, print_executions_table
 from cz.formatters.json_fmt import format_json
 from cz.formatters.mermaid import format_mermaid
@@ -201,9 +201,8 @@ def init(
                     f.write("\n")
                 f.write("# Cohzen execution telemetry\n.cohzen/\n")
 
-    # Invoke scan and audit reports
-    print_console_report(result, console=console)
-    print_audit_report(result, console=console)
+    # Print topology report for slim init output
+    print_topology_report(result, console=console)
 
     console.print(f"\n[bold green]✔ Cohzen initialized at {project_dir}[/bold green]")
     console.print(

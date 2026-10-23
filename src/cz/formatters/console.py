@@ -209,48 +209,7 @@ def print_console_report(result: ScanResult, console: Console | None = None) -> 
 
         # Edges & Routing Table
         if graph.edges:
-            edges_table = Table(
-                title="[bold blue]Graph Topology & Routing Edges[/bold blue]",
-                show_header=True,
-                header_style="bold blue",
-                border_style="dim",
-            )
-            edges_table.add_column("Type", style="bold")
-            edges_table.add_column("Source", style="cyan")
-            edges_table.add_column("Direction", style="white", justify="center")
-            edges_table.add_column("Target / Routing", style="green")
-            edges_table.add_column("Location", style="dim")
-
-            for edge in graph.edges:
-                edge_rel = _get_relative_path(edge.file_path, result.target_path)
-                type_style = "cyan"
-                type_label = edge.edge_type.upper()
-                arrow = "──>"
-
-                if edge.edge_type == "conditional":
-                    type_style = "bold magenta"
-                    type_label = "CONDITIONAL"
-                    arrow = "─?─>"
-                elif edge.edge_type == "entry_point":
-                    type_style = "bold green"
-                    type_label = "ENTRY"
-                elif edge.edge_type == "finish_point":
-                    type_style = "bold red"
-                    type_label = "FINISH"
-
-                target_display = edge.target
-                if edge.conditional_mapping:
-                    mappings = ", ".join(f"'{k}' -> '{v}'" for k, v in edge.conditional_mapping.items())
-                    target_display = f"fn: {edge.condition_fn} {{{mappings}}}"
-
-                edges_table.add_row(
-                    f"[{type_style}]{type_label}[/{type_style}]",
-                    edge.source,
-                    arrow,
-                    target_display,
-                    f"{edge_rel}:{edge.line_number}",
-                )
-            console.print(edges_table)
+            console.print(_build_edges_table(graph, result.target_path))
 
         console.print()
 
@@ -541,6 +500,74 @@ def _get_relative_path(file_path: str, base_path: str) -> str:
         return str(Path(file_path).relative_to(base_path))
     except Exception:
         return os.path.basename(file_path)
+
+
+def _build_edges_table(graph: GraphInfo, target_path: str, title: str | None = None) -> Table:
+    """Build the Rich Table for graph topology and routing edges."""
+    edges_table = Table(
+        title=title or "[bold blue]Graph Topology & Routing Edges[/bold blue]",
+        show_header=True,
+        header_style="bold blue",
+        border_style="dim",
+    )
+    edges_table.add_column("Type", style="bold")
+    edges_table.add_column("Source", style="cyan")
+    edges_table.add_column("Direction", style="white", justify="center")
+    edges_table.add_column("Target / Routing", style="green")
+    edges_table.add_column("Location", style="dim")
+
+    for edge in graph.edges:
+        edge_rel = _get_relative_path(edge.file_path, target_path)
+        type_style = "cyan"
+        type_label = edge.edge_type.upper()
+        arrow = "──>"
+
+        if edge.edge_type == "conditional":
+            type_style = "bold magenta"
+            type_label = "CONDITIONAL"
+            arrow = "─?─>"
+        elif edge.edge_type == "entry_point":
+            type_style = "bold green"
+            type_label = "ENTRY"
+        elif edge.edge_type == "finish_point":
+            type_style = "bold red"
+            type_label = "FINISH"
+
+        target_display = edge.target
+        if edge.conditional_mapping:
+            mappings = ", ".join(f"'{k}' -> '{v}'" for k, v in edge.conditional_mapping.items())
+            target_display = f"fn: {edge.condition_fn} {{{mappings}}}"
+
+        edges_table.add_row(
+            f"[{type_style}]{type_label}[/{type_style}]",
+            edge.source,
+            arrow,
+            target_display,
+            f"{edge_rel}:{edge.line_number}",
+        )
+    return edges_table
+
+
+def print_topology_report(result: ScanResult, console: Console | None = None) -> None:
+    """Renders a slim terminal report showing only graph topology & routing edges."""
+    if console is None:
+        console = Console()
+
+    has_edges = False
+    for graph in result.graphs:
+        if graph.edges:
+            has_edges = True
+            title = (
+                f"[bold blue]Graph Topology & Routing Edges ({graph.name})[/bold blue]"
+                if len(result.graphs) > 1
+                else "[bold blue]Graph Topology & Routing Edges[/bold blue]"
+            )
+            console.print(_build_edges_table(graph, result.target_path, title=title))
+            console.print()
+
+    if not has_edges:
+        console.print("[dim]No graph edges detected in static scan.[/dim]\n")
+
 
 
 def _build_terminal_graph_flow(
