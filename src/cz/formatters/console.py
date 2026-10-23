@@ -569,7 +569,6 @@ def print_topology_report(result: ScanResult, console: Console | None = None) ->
         console.print("[dim]No graph edges detected in static scan.[/dim]\n")
 
 
-
 def _build_terminal_graph_flow(
     graph: GraphInfo, scan_result: ScanResult | None = None, show_tracing: bool = False
 ) -> Panel:
