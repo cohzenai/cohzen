@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-10-23
+
+### Fixed
+- **Syntax Error Reporting in Static Scan**: Surfaced file parsing and syntax errors prominently in terminal scan reports rather than silently reporting "No graphs found."
+- **Empty Repo Observability Coverage**: Formatted coverage as `n/a, no nodes found` on codebases with 0 nodes instead of displaying a misleading `Nodes: 0/0 (100.0%)`.
+- **Single Source of Truth for Version**: Updated `cz version` to read version dynamically from package metadata via `importlib.metadata` with graceful fallback, eliminating hardcoded drift.
+- **Clean Error Handling in `cz capture`**: Caught missing command/executable errors cleanly (`FileNotFoundError`) to display a concise one-line error instead of a 40-line Python traceback.
+- **Non-Zero Exit on Missing Execution**: Ensured `cz run <bad_id>` exits with code `1` when an execution ID is not found in the SQLite store.
+
 ## [0.3.1] - 2026-10-21
 
 ### Fixed

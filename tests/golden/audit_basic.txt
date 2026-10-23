@@ -1,0 +1,29 @@
+╭───────────────────────── Cohzen Observability & Telemetry Audit (v0.1) ──────────────────────────╮
+│                                                                                                  │
+│  Scanned Target:    /Users/aarora/Dev/cohzen-ai/cz/examples/langgraph-basic                      │
+│  Files Examined:    2 total (1 Python files)                                                     │
+│  Scan Duration:     0.50 ms                                                                      │
+│                                                                                                  │
+│  Observability Tools:  None detected across manifests, env, or code                              │
+│  Telemetry Packages:  None detected in package manifests                                         │
+│  Environment Config:  No tracing environment variables found in .env files                       │
+│  Tracing Coverage:    Nodes: 0/2 (0.0%)  •  Tools: 0/0                                           │
+│                                                                                                  │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+                                    Node Instrumentation Status                                     
+┏━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┓
+┃                 ┃              ┃ Instrumentation ┃ Observability   ┃ Active          ┃           ┃
+┃ Node / Function ┃ Location     ┃ Status          ┃ Tool            ┃ Decorators      ┃ LLM Calls ┃
+┡━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━┩
+│ 🤖              │ app.py:12-14 │ ✖               │ None            │ None            │ None      │
+│ validate_input  │              │ Uninstrumented  │                 │                 │           │
+│ 🤖              │ app.py:17-20 │ ✖               │ None            │ None            │ None      │
+│ transform_data  │              │ Uninstrumented  │                 │                 │           │
+└─────────────────┴──────────────┴─────────────────┴─────────────────┴─────────────────┴───────────┘
+
+╭───────────────────────────────────── Audit Findings & Gaps ──────────────────────────────────────╮
+│                                                                                                  │
+│    ⚠ No LLM observability package, environment configuration, or tracing decorators detected in  │
+│  repository.                                                                                     │
+│                                                                                                  │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯

@@ -2,7 +2,12 @@
 
 from typing import Any
 
-__version__ = "0.3.0"
+try:
+    from importlib.metadata import version as _dist_version
+
+    __version__ = _dist_version("cohzen")
+except Exception:
+    __version__ = "0.3.2"
 
 
 def __getattr__(name: str) -> Any:

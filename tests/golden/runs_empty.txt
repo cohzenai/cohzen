@@ -1,0 +1,4 @@
+No execution store found.
+Expected database at: 
+/private/var/folders/9l/fggxg3sj1254zsf1ngwcf01h0000gn/T/tmp4cez2bkk/.cohzen/executions.db
+Run cz init to initialize Cohzen for this project.

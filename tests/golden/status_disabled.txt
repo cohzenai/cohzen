@@ -1,0 +1,5 @@
+Project: /private/var/folders/9l/fggxg3sj1254zsf1ngwcf01h0000gn/T/tmpilfyrz3n
+Enabled: False
+Capture in CI: False
+Startup hook: /Users/aarora/Dev/cohzen-ai/cz/.venv/lib/python3.13/site-packages/cohzen_startup.pth
+Retention: 1000 runs, 30 days, 65536 bytes/payload

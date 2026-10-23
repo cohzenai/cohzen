@@ -1,0 +1,2 @@
+✔ Opened interactive architecture visualizer in browser 
+(/var/folders/9l/fggxg3sj1254zsf1ngwcf01h0000gn/T/cz_graph_viewer.html)

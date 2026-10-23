@@ -1,0 +1,63 @@
+╭─────────────────────────────── Cohzen Architecture Scanner (v0.1) ───────────────────────────────╮
+│                                                                                                  │
+│  Scanned Target: /Users/aarora/Dev/cohzen-ai/cz/examples/langgraph-tools                         │
+│  Frameworks:     ✓ langgraph                                                                     │
+│  Files Examined: 2 total (1 Python files)                                                        │
+│  Scan Duration:  1.35 ms                                                                         │
+│                                                                                                  │
+│  Graphs Detected: 1  • Compiled: 1  • Registered Nodes: 2  • Edges/Routes: 3                     │
+│  Node Handlers:   1  • LLM Call Sites: 1  • Tools Defined: 2  • ToolNodes: 1                     │
+│                                                                                                  │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─────────────────── Graph #1: builder (StateGraph) StateSchema: MessagesState ────────────────────╮
+│ ✔ COMPILED -> variable: app at agent_tools.py:43                                                 │
+╰─────────────────────────────────────── agent_tools.py:31 ────────────────────────────────────────╯
+╭─────────────── 🌐 Architecture Flow (Nodes • Edges • Tools • Checkpointer • LLMs) ───────────────╮
+│                                                                                                  │
+│     ● START                                                                                      │
+│       │                                                                                          │
+│       ▼                                                                                          │
+│       ├── ? route: 'tools' ──► tools                                                             │
+│       ├── ? route: 'finish' ──►  ● END                                                           │
+│    ╔══ 🛠️ tools (ToolNode) ═══════════════════════════════╗                                      │
+│    ║  Tools: search_docs, calculate_metrics                                                      │
+│    ╚══════════════════════════════════════════════════════╝                                      │
+│    ┌── 🤖 tools (tool_node) ──────────────────────┐                                              │
+│    │  🧠 LLM: None (logic/router)                                                                │
+│    └───────────────────────────────────────────────────────┘                                     │
+│       └──► assistant                                                                             │
+│                                                                                                  │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+                                    Registered Nodes & Handlers                                     
+┏━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Node Name    ┃ Handler / Location         ┃ LLM Calls & Models       ┃ Tools Bound / Attached    ┃
+┡━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 🤖 assistant │ assistant                  │ langchain (model.invoke) │ bound:                    │
+│              │ (agent_tools.py:23-26)     │                          │                           │
+│ 🤖 tools     │ tool_node                  │ Tool Execution           │ ToolNode(search_docs,     │
+│              │ (agent_tools.py:33)        │                          │ calculate_metrics)        │
+└──────────────┴────────────────────────────┴──────────────────────────┴───────────────────────────┘
+                                   Graph Topology & Routing Edges                                   
+┏━━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┓
+┃ Type        ┃ Source    ┃ Direction ┃ Target / Routing                       ┃ Location          ┃
+┡━━━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━┩
+│ DIRECT      │ START     │    ──>    │ assistant                              │ agent_tools.py:35 │
+│ CONDITIONAL │ assistant │   ─?─>    │ fn: lambda state: 'tools' if           │ agent_tools.py:36 │
+│             │           │           │ state['messages'][-1].tool_calls else  │                   │
+│             │           │           │ 'finish' {'tools' -> 'tools', 'finish' │                   │
+│             │           │           │ -> 'END'}                              │                   │
+│ DIRECT      │ tools     │    ──>    │ assistant                              │ agent_tools.py:41 │
+└─────────────┴───────────┴───────────┴────────────────────────────────────────┴───────────────────┘
+
+                                 🛠️ Detected Tool Functions (@tool)                                 
+┏━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Tool Name            ┃ Location             ┃ Docstring / Purpose                                ┃
+┡━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 🔧 search_docs       │ agent_tools.py:8-10  │ Search internal documentation for relevant         │
+│                      │                      │ context.                                           │
+│ 🔧 calculate_metrics │ agent_tools.py:14-16 │ Compute aggregate statistical score.               │
+└──────────────────────┴──────────────────────┴────────────────────────────────────────────────────┘
+
+1 graph(s)  •  2 node(s)  •  3 edge(s)  •  2 tool(s)  •  1 model(s)
+✓ Architecture discovered  • Run cz audit to inspect observability coverage and telemetry.
+

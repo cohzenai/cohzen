@@ -1,0 +1,169 @@
+
+Execution 912741e0
+────────────────────────────
+Graph       repo_react_agent
+Status      ✗ failed
+Duration    36.90s
+Error       GraphRecursionError: Recursion limit of 10 reached without hitting a stop condition. You
+can increase the limit by setting the `recursion_limit` config key.
+For troubleshooting, visit: 
+https://docs.langchain.com/oss/python/langgraph/errors/GRAPH_RECURSION_LIMIT
+
+START
+  │
+  ▼
+agent                           8.70s
+      why: Executing node: agent
+  │
+  ▼
+agent                           8.70s
+      why: Invoking LLM to analyze state and select next tool or synthesize response.
+  │
+  ▼
+llm:local-fast                  8.69s
+  │
+  ▼
+agent                           0ms
+  │
+  ▼
+tools                           5ms
+  │
+  ▼
+tool_node                       3ms
+      why: Executing tool: tool_node
+  │
+  ▼
+read_file_snippet               1ms
+  │
+  ▼
+read_file_snippet               0ms
+      why: Read the first few lines of a file in the repository.
+  │
+  ▼
+read_file_snippet               0ms
+      why: Reading file snippet: benchmarks/famous_repos/langgraph/README.md
+  │
+  ▼
+agent                           7.13s
+      why: Executing node: agent
+  │
+  ▼
+agent                           7.12s
+      why: Invoking LLM to analyze state and select next tool or synthesize response.
+  │
+  ▼
+llm:local-fast                  7.12s
+  │
+  ▼
+agent                           0ms
+  │
+  ▼
+tools                           2ms
+  │
+  ▼
+tool_node                       0ms
+      why: Executing tool: tool_node
+  │
+  ▼
+agent                           7.03s
+      why: Executing node: agent
+  │
+  ▼
+agent                           7.02s
+      why: Invoking LLM to analyze state and select next tool or synthesize response.
+  │
+  ▼
+llm:local-fast                  7.02s
+  │
+  ▼
+agent                           0ms
+  │
+  ▼
+tools                           6ms
+  │
+  ▼
+tool_node                       3ms
+      why: Executing tool: tool_node
+  │
+  ▼
+list_repo_structure             1ms
+  │
+  ▼
+list_repo_structure             0ms
+      why: List directories and key files inside a repository path.
+  │
+  ▼
+list_repo_structure             0ms
+      why: Inspecting repository directory: benchmarks/famous_repos/langgraph
+  │
+  ▼
+agent                           7.39s
+      why: Executing node: agent
+  │
+  ▼
+agent                           7.37s
+      why: Invoking LLM to analyze state and select next tool or synthesize response.
+  │
+  ▼
+llm:local-fast                  7.36s
+  │
+  ▼
+agent                           0ms
+  │
+  ▼
+tools                           11ms
+  │
+  ▼
+tool_node                       4ms
+      why: Executing tool: tool_node
+  │
+  ▼
+list_repo_structure             1ms
+  │
+  ▼
+list_repo_structure             0ms
+      why: List directories and key files inside a repository path.
+  │
+  ▼
+list_repo_structure             0ms
+      why: Inspecting repository directory: benchmarks/famous_repos/langgraph
+  │
+  ▼
+agent                           6.55s
+      why: Executing node: agent
+  │
+  ▼
+agent                           6.53s
+      why: Invoking LLM to analyze state and select next tool or synthesize response.
+  │
+  ▼
+llm:local-fast                  6.53s
+  │
+  ▼
+agent                           0ms
+  │
+  ▼
+tools                           13ms
+  │
+  ▼
+tool_node                       4ms
+      why: Executing tool: tool_node
+  │
+  ▼
+list_repo_structure             2ms
+  │
+  ▼
+list_repo_structure             0ms
+      why: List directories and key files inside a repository path.
+  │
+  ▼
+list_repo_structure             0ms
+      why: Inspecting repository directory: benchmarks/famous_repos/langgraph
+  │
+  ▼
+END
+
+LLM calls     5
+Tool calls    17
+Nodes         20
+

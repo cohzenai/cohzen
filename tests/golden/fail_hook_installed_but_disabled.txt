@@ -1,0 +1,5 @@
+Project: /private/var/folders/9l/fggxg3sj1254zsf1ngwcf01h0000gn/T/tmp7olr12ry
+Enabled: False
+Capture in CI: False
+Startup hook: not installed
+Retention: 1000 runs, 30 days, 65536 bytes/payload

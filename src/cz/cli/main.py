@@ -249,8 +249,17 @@ def capture(
         )
         env = os.environ.copy()
         env["PYTHONPATH"] = os.pathsep.join(filter(None, [bootstrap_dir, env.get("PYTHONPATH", "")]))
-        env["COHZEN_PROJECT"] = str(project_dir)
-        result = subprocess.run(command, cwd=project_dir, env=env, check=False)
+        try:
+            result = subprocess.run(command, cwd=project_dir, env=env, check=False)
+        except FileNotFoundError:
+            console.print(f"[bold red]Error:[/bold red] Command not found: '{command[0]}'")
+            raise typer.Exit(code=127)
+        except PermissionError:
+            console.print(f"[bold red]Error:[/bold red] Permission denied: '{command[0]}'")
+            raise typer.Exit(code=126)
+        except OSError as exc:
+            console.print(f"[bold red]Error:[/bold red] Failed to execute '{command[0]}': {exc}")
+            raise typer.Exit(code=1)
     if result.returncode:
         raise typer.Exit(code=result.returncode)
 
@@ -495,13 +504,13 @@ def view_run(
     db_path = _find_db(path)
     if not db_path.is_file():
         console.print(f"[bold red]Error:[/bold red] No execution store found at {db_path}")
-        return
+        raise typer.Exit(code=1)
 
     store = SQLiteExecutionStore(db_path=db_path)
     execution = store.get_execution(execution_id)
     if not execution:
         console.print(f"[bold red]Error:[/bold red] Execution [yellow]{execution_id}[/yellow] not found in store.")
-        return
+        raise typer.Exit(code=1)
 
     spans = store.get_spans(execution.id)
 

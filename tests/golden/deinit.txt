@@ -1,0 +1,10 @@
+Cohzen will:
+  • remove /private/var/folders/9l/fggxg3sj1254zsf1ngwcf01h0000gn/T/tmpilfyrz3n/.cohzen
+  • remove startup hook 
+/Users/aarora/Dev/cohzen-ai/cz/.venv/lib/python3.13/site-packages/cohzen_startup.pth
+
+✔ Cohzen deinitialized at /private/var/folders/9l/fggxg3sj1254zsf1ngwcf01h0000gn/T/tmpilfyrz3n
+  • Removed .cohzen/ directory
+  • Removed cohzen_startup.pth 
+(/Users/aarora/Dev/cohzen-ai/cz/.venv/lib/python3.13/site-packages/cohzen_startup.pth)
+

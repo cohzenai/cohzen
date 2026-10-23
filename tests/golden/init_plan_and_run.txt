@@ -1,0 +1,67 @@
+Cohzen will:
+  • create or modify 
+/private/var/folders/9l/fggxg3sj1254zsf1ngwcf01h0000gn/T/tmpilfyrz3n/.cohzen/config.toml
+  • create or modify 
+/private/var/folders/9l/fggxg3sj1254zsf1ngwcf01h0000gn/T/tmpilfyrz3n/.cohzen/manifest.json
+  • create or modify 
+/private/var/folders/9l/fggxg3sj1254zsf1ngwcf01h0000gn/T/tmpilfyrz3n/.cohzen/executions.db
+  • create or modify /private/var/folders/9l/fggxg3sj1254zsf1ngwcf01h0000gn/T/tmpilfyrz3n/.gitignore
+  • create or modify 
+/Users/aarora/Dev/cohzen-ai/cz/.venv/lib/python3.13/site-packages/cohzen_startup.pth
+╭─────────────────────────────── Cohzen Architecture Scanner (v0.1) ───────────────────────────────╮
+│                                                                                                  │
+│  Scanned Target: /private/var/folders/9l/fggxg3sj1254zsf1ngwcf01h0000gn/T/tmpilfyrz3n            │
+│  Frameworks:     ✓ langgraph                                                                     │
+│  Files Examined: 2 total (1 Python files)                                                        │
+│  Scan Duration:  0.37 ms                                                                         │
+│                                                                                                  │
+│  Graphs Detected: 1  • Compiled: 0  • Registered Nodes: 0  • Edges/Routes: 0                     │
+│  Node Handlers:   0  • LLM Call Sites: 0  • Tools Defined: 0  • ToolNodes: 0                     │
+│                                                                                                  │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭──────────────────────── Graph #1: builder (StateGraph) StateSchema: dict ────────────────────────╮
+│ ✖ NOT COMPILED (Defined at app.py:2)                                                             │
+╰──────────────────────────────────────────── app.py:2 ────────────────────────────────────────────╯
+╭─────────────── 🌐 Architecture Flow (Nodes • Edges • Tools • Checkpointer • LLMs) ───────────────╮
+│                                                                                                  │
+│     ● START                                                                                      │
+│       │                                                                                          │
+│       ▼                                                                                          │
+│                                                                                                  │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+1 graph(s)  •  0 node(s)  •  0 edge(s)  •  0 tool(s)  •  0 model(s)
+✓ Architecture discovered  • Run cz audit to inspect observability coverage and telemetry.
+
+╭───────────────────────── Cohzen Observability & Telemetry Audit (v0.1) ──────────────────────────╮
+│                                                                                                  │
+│  Scanned Target:    /private/var/folders/9l/fggxg3sj1254zsf1ngwcf01h0000gn/T/tmpilfyrz3n         │
+│  Files Examined:    2 total (1 Python files)                                                     │
+│  Scan Duration:     0.37 ms                                                                      │
+│                                                                                                  │
+│  Observability Tools:  None detected across manifests, env, or code                              │
+│  Telemetry Packages:  None detected in package manifests                                         │
+│  Environment Config:  No tracing environment variables found in .env files                       │
+│  Tracing Coverage:    Nodes: 0/0 (100.0%)  •  Tools: 0/0                                         │
+│                                                                                                  │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭───────────────────────────────────── Audit Findings & Gaps ──────────────────────────────────────╮
+│                                                                                                  │
+│    ⚠ No LLM observability package, environment configuration, or tracing decorators detected in  │
+│  repository.                                                                                     │
+│                                                                                                  │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+✔ Cohzen initialized at /private/var/folders/9l/fggxg3sj1254zsf1ngwcf01h0000gn/T/tmpilfyrz3n
+  • Manifest: .cohzen/manifest.json (1 graphs, 0 nodes, 0 tools)
+  • Telemetry DB: .cohzen/executions.db
+  • Startup hook: 
+/Users/aarora/Dev/cohzen-ai/cz/.venv/lib/python3.13/site-packages/cohzen_startup.pth
+  • Added .cohzen/ to .gitignore
+
+Capture is enabled for eligible local LangGraph runs. One-off capture remains available:
+  cz capture -- python app.py
+
+Then inspect recorded executions:
+  cz runs
+

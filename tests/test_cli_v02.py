@@ -208,7 +208,7 @@ def test_cli_runs_and_run_detail(tmp_path: Path):
 
     # 5. Test unknown execution ID
     res_unknown = runner.invoke(app, ["run", "nonexistent_id", "--path", str(tmp_path)])
-    assert res_unknown.exit_code == 0
+    assert res_unknown.exit_code == 1
     assert "not found in store" in res_unknown.stdout
 
 

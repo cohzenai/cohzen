@@ -1,0 +1,3 @@
+Cohzen capture runs the supplied command and therefore runs your code.
+Command: /Users/aarora/Dev/cohzen-ai/cz/.venv/bin/python3 -c print('hello from captured script')
+hello from captured script

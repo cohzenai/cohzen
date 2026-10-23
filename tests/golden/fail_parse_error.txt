@@ -1,0 +1,14 @@
+╭─────────────────────────────── Cohzen Architecture Scanner (v0.1) ───────────────────────────────╮
+│                                                                                                  │
+│  Scanned Target: /private/var/folders/9l/fggxg3sj1254zsf1ngwcf01h0000gn/T/tmp808gn4at            │
+│  Frameworks:     ✓ LangGraph                                                                     │
+│  Files Examined: 1 total (1 Python files)                                                        │
+│  Scan Duration:  0.26 ms                                                                         │
+│                                                                                                  │
+│  Graphs Detected: 0  • Compiled: 0  • Registered Nodes: 0  • Edges/Routes: 0                     │
+│  Node Handlers:   0  • LLM Call Sites: 0  • Tools Defined: 0  • ToolNodes: 0                     │
+│                                                                                                  │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭──────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ No LangGraph definitions, nodes, or tools detected in the specified path.                        │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯

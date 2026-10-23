@@ -54,7 +54,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Run Cohzen Agent Gate
-        uses: cohzenai/cohzen@v0.3.1 # or uses: ./ if vendored
+        uses: cohzenai/cohzen@v0.3.2 # or uses: ./ if vendored
         with:
           path: "."
           min-coverage: "80" # Enforce 80% node/tool telemetry coverage

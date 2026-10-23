@@ -1,0 +1,37 @@
+╭───────────────────────── Cohzen Observability & Telemetry Audit (v0.1) ──────────────────────────╮
+│                                                                                                  │
+│  Scanned Target:    /Users/aarora/Dev/cohzen-ai/cz/examples/langgraph-tools                      │
+│  Files Examined:    2 total (1 Python files)                                                     │
+│  Scan Duration:     0.58 ms                                                                      │
+│                                                                                                  │
+│  Observability Tools:  None detected across manifests, env, or code                              │
+│  Telemetry Packages:  None detected in package manifests                                         │
+│  Environment Config:  No tracing environment variables found in .env files                       │
+│  Tracing Coverage:    Nodes: 0/1 (0.0%)  •  Tools: 0/2                                           │
+│                                                                                                  │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+                                    Node Instrumentation Status                                     
+┏━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┓
+┃ Node /         ┃                 ┃ Instrumentati… ┃ Observability   ┃ Active         ┃           ┃
+┃ Function       ┃ Location        ┃ Status         ┃ Tool            ┃ Decorators     ┃ LLM Calls ┃
+┡━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━┩
+│ 🤖 assistant   │ agent_tools.py… │ ✖              │ None            │ None           │ 1 call(s) │
+│                │                 │ Uninstrumented │                 │                │           │
+└────────────────┴─────────────────┴────────────────┴─────────────────┴────────────────┴───────────┘
+
+                                   Tool Instrumentation Status                                    
+┏━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃ Tool Name            ┃ Location             ┃ Tracing Status ┃ Observability Tool ┃ Decorators ┃
+┡━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ 🔧 search_docs       │ agent_tools.py:8-10  │ Untraced       │ None               │ None       │
+│ 🔧 calculate_metrics │ agent_tools.py:14-16 │ Untraced       │ None               │ None       │
+└──────────────────────┴──────────────────────┴────────────────┴────────────────────┴────────────┘
+
+╭───────────────────────────────────── Audit Findings & Gaps ──────────────────────────────────────╮
+│                                                                                                  │
+│    ⚠ No LLM observability package, environment configuration, or tracing decorators detected in  │
+│  repository.                                                                                     │
+│    ⚠ Agent(s) 'assistant' perform LLM calls but lack function-level tracing decorators (e.g.     │
+│  @traceable or @observe).                                                                        │
+│                                                                                                  │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯

@@ -1,0 +1,54 @@
+╭─────────────────────────────── Cohzen Architecture Scanner (v0.1) ───────────────────────────────╮
+│                                                                                                  │
+│  Scanned Target: /Users/aarora/Dev/cohzen-ai/cz/examples/langgraph-routing                       │
+│  Frameworks:     ✓ langgraph                                                                     │
+│  Files Examined: 2 total (1 Python files)                                                        │
+│  Scan Duration:  1.34 ms                                                                         │
+│                                                                                                  │
+│  Graphs Detected: 1  • Compiled: 1  • Registered Nodes: 4  • Edges/Routes: 5                     │
+│  Node Handlers:   4  • LLM Call Sites: 0  • Tools Defined: 0  • ToolNodes: 0                     │
+│                                                                                                  │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─────────────────── Graph #1: builder (StateGraph) StateSchema: AgentTeamState ───────────────────╮
+│ ✔ COMPILED -> variable: workflow at supervisor.py:50                                             │
+│   Interrupt Before: reviewer                                                                     │
+╰──────────────────────────────────────── supervisor.py:36 ────────────────────────────────────────╯
+╭─────────────── 🌐 Architecture Flow (Nodes • Edges • Tools • Checkpointer • LLMs) ───────────────╮
+│                                                                                                  │
+│     ● START                                                                                      │
+│       │                                                                                          │
+│       ▼                                                                                          │
+│       ├── ? route: 'researcher' ──► researcher                                                   │
+│       ├── ? route: 'code' ──► coder                                                              │
+│       ├── ? route: 'finish' ──► reviewer                                                         │
+│       └──► supervisor                                                                            │
+│       │                                                                                          │
+│       ▼                                                                                          │
+│       └──►  ● END                                                                                │
+│                                                                                                  │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+                                   Registered Nodes & Handlers                                    
+┏━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Node Name     ┃ Handler / Location               ┃ LLM Calls & Models ┃ Tools Bound / Attached ┃
+┡━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 🤖 supervisor │ supervisor (supervisor.py:12-14) │ No LLM invoked     │ -                      │
+│ 🤖 researcher │ researcher (supervisor.py:17-19) │ No LLM invoked     │ -                      │
+│ 🤖 coder      │ coder (supervisor.py:22-24)      │ No LLM invoked     │ -                      │
+│ 🤖 reviewer   │ reviewer (supervisor.py:27-29)   │ No LLM invoked     │ -                      │
+└───────────────┴──────────────────────────────────┴────────────────────┴────────────────────────┘
+                                   Graph Topology & Routing Edges                                   
+┏━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┓
+┃ Type        ┃ Source     ┃ Direction ┃ Target / Routing                       ┃ Location         ┃
+┡━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━┩
+│ DIRECT      │ START      │    ──>    │ supervisor                             │ supervisor.py:42 │
+│ CONDITIONAL │ supervisor │   ─?─>    │ fn: route_decision {'researcher' ->    │ supervisor.py:43 │
+│             │            │           │ 'researcher', 'code' -> 'coder',       │                  │
+│             │            │           │ 'finish' -> 'reviewer'}                │                  │
+│ DIRECT      │ researcher │    ──>    │ supervisor                             │ supervisor.py:46 │
+│ DIRECT      │ coder      │    ──>    │ reviewer                               │ supervisor.py:47 │
+│ DIRECT      │ reviewer   │    ──>    │ END                                    │ supervisor.py:48 │
+└─────────────┴────────────┴───────────┴────────────────────────────────────────┴──────────────────┘
+
+1 graph(s)  •  4 node(s)  •  5 edge(s)  •  0 tool(s)  •  0 model(s)
+✓ Architecture discovered  • Run cz audit to inspect observability coverage and telemetry.
+

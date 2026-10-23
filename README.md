@@ -167,7 +167,7 @@ jobs:
       - run: pip install cohzen
 
       - name: Cohzen Agent Architecture & Telemetry Gate
-        uses: cohzenai/cohzen@v0.3.1
+        uses: cohzenai/cohzen@v0.3.2
         with:
           path: "."
           min-coverage: "80"

@@ -67,13 +67,36 @@ def print_console_report(result: ScanResult, console: Console | None = None) -> 
         )
     )
 
-    if not result.graphs and not result.agent_definitions and not result.tool_definitions:
+    if result.errors:
+        err_lines = []
+        for err in result.errors:
+            rel_err_path = _get_relative_path(err.file_path, result.target_path)
+            err_lines.append(f"[bold red]✖ {err.error_type}:[/bold red] [white]{rel_err_path}[/white] — {err.message}")
         console.print(
             Panel(
-                "[yellow]No LangGraph definitions, nodes, or tools detected in the specified path.[/yellow]",
-                border_style="yellow",
+                Text.from_markup("\n".join(err_lines)),
+                title=f"[bold red]Parsing & Syntax Errors ({len(result.errors)} file{'s' if len(result.errors) != 1 else ''} failed to parse)[/bold red]",
+                border_style="red",
+                padding=(1, 2),
             )
         )
+
+    if not result.graphs and not result.agent_definitions and not result.tool_definitions:
+        if result.errors:
+            console.print(
+                Panel(
+                    "[bold yellow]No LangGraph definitions could be discovered because the file(s) above contained syntax or parsing errors.[/bold yellow]\n"
+                    "[dim]Fix the syntax errors above and run cz scan again.[/dim]",
+                    border_style="yellow",
+                )
+            )
+        else:
+            console.print(
+                Panel(
+                    "[yellow]No LangGraph definitions, nodes, or tools detected in the specified path.[/yellow]",
+                    border_style="yellow",
+                )
+            )
         return
 
     # --- 2. Graphs Detail ---
@@ -396,12 +419,17 @@ def print_audit_report(result: ScanResult, console: Console | None = None) -> No
         )
 
     # Coverage
-    agent_color = (
-        "green" if obs.agent_instrumentation_pct >= 80 else "yellow" if obs.agent_instrumentation_pct > 0 else "red"
-    )
+    if obs.total_agents == 0:
+        nodes_cov_str = "[dim]n/a, no nodes found[/dim]"
+    else:
+        agent_color = (
+            "green" if obs.agent_instrumentation_pct >= 80 else "yellow" if obs.agent_instrumentation_pct > 0 else "red"
+        )
+        nodes_cov_str = f"[{agent_color}]{obs.instrumented_agents}/{obs.total_agents} ({obs.agent_instrumentation_pct}%)[/{agent_color}]"
+
     tool_color = "green" if obs.total_tools == 0 or obs.instrumented_tools > 0 else "yellow"
     obs_lines.append(
-        f"[bold cyan]Tracing Coverage:[/bold cyan]    Nodes: [{agent_color}]{obs.instrumented_agents}/{obs.total_agents} ({obs.agent_instrumentation_pct}%)[/{agent_color}]  •  Tools: [{tool_color}]{obs.instrumented_tools}/{obs.total_tools}[/{tool_color}]"
+        f"[bold cyan]Tracing Coverage:[/bold cyan]    Nodes: {nodes_cov_str}  •  Tools: [{tool_color}]{obs.instrumented_tools}/{obs.total_tools}[/{tool_color}]"
     )
 
     panel_color = "green" if obs.is_observability_configured and obs.agent_instrumentation_pct > 50 else "yellow"

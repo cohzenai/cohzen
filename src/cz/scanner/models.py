@@ -205,7 +205,7 @@ class ObservabilityAudit(BaseModel):
     @property
     def agent_instrumentation_pct(self) -> float:
         if self.total_agents == 0:
-            return 100.0
+            return 0.0
         return round((self.instrumented_agents / self.total_agents) * 100, 1)
 
 

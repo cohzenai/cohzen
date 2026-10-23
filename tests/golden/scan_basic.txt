@@ -1,0 +1,43 @@
+╭─────────────────────────────── Cohzen Architecture Scanner (v0.1) ───────────────────────────────╮
+│                                                                                                  │
+│  Scanned Target: /Users/aarora/Dev/cohzen-ai/cz/examples/langgraph-basic                         │
+│  Frameworks:     ✓ langgraph                                                                     │
+│  Files Examined: 2 total (1 Python files)                                                        │
+│  Scan Duration:  0.55 ms                                                                         │
+│                                                                                                  │
+│  Graphs Detected: 1  • Compiled: 1  • Registered Nodes: 2  • Edges/Routes: 3                     │
+│  Node Handlers:   2  • LLM Call Sites: 0  • Tools Defined: 0  • ToolNodes: 0                     │
+│                                                                                                  │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭──────────────────── Graph #1: builder (StateGraph) StateSchema: ProcessState ────────────────────╮
+│ ✔ COMPILED -> variable: app at app.py:32                                                         │
+╰─────────────────────────────────────────── app.py:24 ────────────────────────────────────────────╯
+╭─────────────── 🌐 Architecture Flow (Nodes • Edges • Tools • Checkpointer • LLMs) ───────────────╮
+│                                                                                                  │
+│     ● START                                                                                      │
+│       │                                                                                          │
+│       ▼                                                                                          │
+│       │                                                                                          │
+│       ▼                                                                                          │
+│       └──►  ● END                                                                                │
+│                                                                                                  │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+                                 Registered Nodes & Handlers                                  
+┏━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ Node Name    ┃ Handler / Location            ┃ LLM Calls & Models ┃ Tools Bound / Attached ┃
+┡━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ 🤖 validate  │ validate_input (app.py:12-14) │ No LLM invoked     │ -                      │
+│ 🤖 transform │ transform_data (app.py:17-20) │ No LLM invoked     │ -                      │
+└──────────────┴───────────────────────────────┴────────────────────┴────────────────────────┘
+                 Graph Topology & Routing Edges                  
+┏━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━┓
+┃ Type   ┃ Source    ┃ Direction ┃ Target / Routing ┃ Location  ┃
+┡━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━┩
+│ DIRECT │ START     │    ──>    │ validate         │ app.py:28 │
+│ DIRECT │ validate  │    ──>    │ transform        │ app.py:29 │
+│ DIRECT │ transform │    ──>    │ END              │ app.py:30 │
+└────────┴───────────┴───────────┴──────────────────┴───────────┘
+
+1 graph(s)  •  2 node(s)  •  3 edge(s)  •  0 tool(s)  •  0 model(s)
+✓ Architecture discovered  • Run cz audit to inspect observability coverage and telemetry.
+
