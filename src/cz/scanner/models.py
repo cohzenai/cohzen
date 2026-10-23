@@ -203,9 +203,14 @@ class ObservabilityAudit(BaseModel):
 
     @computed_field
     @property
-    def agent_instrumentation_pct(self) -> float:
+    def agent_instrumentation_pct(self) -> float | None:
+        """Agent telemetry instrumentation percentage, or None when no nodes were found.
+
+        Returns None (serialised as JSON null) when total_agents == 0 so that
+        callers can distinguish "not applicable" from "0% on a live codebase".
+        """
         if self.total_agents == 0:
-            return 0.0
+            return None
         return round((self.instrumented_agents / self.total_agents) * 100, 1)
 
 

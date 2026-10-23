@@ -632,12 +632,25 @@ def audit(
     min_coverage: float | None = typer.Option(
         None,
         "--min-coverage",
-        help="Minimum required agent/node instrumentation percentage (0-100). Exits with code 1 if not met.",
+        help=(
+            "Minimum required agent/node instrumentation percentage (0-100). "
+            "Exit code 1 if not met. Skipped with an INFO line when no nodes are found, "
+            "unless --fail-on-empty is also passed."
+        ),
     ),
     fail_on_missing: bool = typer.Option(
         False,
         "--fail-on-missing",
         help="Exit with code 1 if no telemetry packages or environment configurations are detected.",
+    ),
+    fail_on_empty: bool = typer.Option(
+        False,
+        "--fail-on-empty",
+        help=(
+            "Exit with code 1 when no agent nodes are found. "
+            "By default --min-coverage is silently skipped on empty repos; "
+            "this flag makes that an error instead."
+        ),
     ),
     verbose: bool = typer.Option(
         False,
@@ -646,7 +659,14 @@ def audit(
         help="Display detailed debugging info during scan",
     ),
 ) -> None:
-    """Audit observability, tracing, and telemetry instrumentation across nodes and tools."""
+    """Audit observability, tracing, and telemetry instrumentation across nodes and tools.
+
+    Exit codes:
+      0  All requested checks passed (or skipped on an empty repo without --fail-on-empty).
+      1  A CI gate check failed (--min-coverage not met, --fail-on-missing triggered,
+         or --fail-on-empty triggered on an empty repo).
+      2  Usage / argument error (handled by Typer).
+    """
     if not output and not json_output_flag:
         with console.status(f"[bold magenta]Auditing observability instrumentation at {path}...[/bold magenta]"):
             result = scan_repository(path, verbose=verbose)
@@ -672,13 +692,29 @@ def audit(
     # CI / CD Gate Enforcement
     failed_reasons: list[str] = []
     obs = result.observability
+
     if fail_on_missing:
         if not obs or not obs.is_observability_configured:
             failed_reasons.append("No LLM observability package or environment config was detected.")
 
+    # --fail-on-empty: fail if no agent nodes were found.
+    if fail_on_empty and (not obs or obs.total_agents == 0):
+        failed_reasons.append(
+            "No agent nodes found in the scanned path. "
+            "If this is intentional, remove --fail-on-empty."
+        )
+
     if min_coverage is not None:
-        pct = obs.agent_instrumentation_pct if obs else 0.0
-        if pct < min_coverage:
+        pct = obs.agent_instrumentation_pct if obs else None
+        if pct is None:
+            # No nodes found — coverage is not applicable.
+            # Default: skip the gate with an INFO line.
+            # --fail-on-empty (handled above) is the correct flag to fail on empty repos.
+            console.print(
+                "[dim cyan]INFO:[/dim cyan] [dim]--min-coverage skipped: no agent nodes found "
+                "in scanned path. Use --fail-on-empty to fail on empty repositories.[/dim]"
+            )
+        elif pct < min_coverage:
             failed_reasons.append(
                 f"Agent instrumentation coverage is {pct}%, below the required threshold of {min_coverage}%."
             )

@@ -7,7 +7,7 @@ try:
 
     __version__ = _dist_version("cohzen")
 except Exception:
-    __version__ = "0.3.2"
+    __version__ = "unknown"
 
 
 def __getattr__(name: str) -> Any:
